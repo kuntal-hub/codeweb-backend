@@ -1,10 +1,12 @@
 import mongoose,{Schema} from "mongoose";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const collectionSchema = new Schema({
     name:{
         type:String,
         required:true,
-        trim:true
+        trim:true,
+        index:"text"
     },
     description:{
         type:String,
@@ -13,6 +15,10 @@ const collectionSchema = new Schema({
     owner:{
         type:Schema.Types.ObjectId,
         ref:"User"
+    },
+    views:{
+        type:Number,
+        default:0
     },
     isPublic:{
         type:Boolean,
@@ -23,5 +29,7 @@ const collectionSchema = new Schema({
         ref:"Web"
     }]
 },{timestamps:true});
+
+collectionSchema.plugin(mongooseAggregatePaginate);
 
 export const Collection = mongoose.model("Collection",collectionSchema);
