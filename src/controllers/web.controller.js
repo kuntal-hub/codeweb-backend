@@ -639,41 +639,89 @@ const getTrendingWebs = asyncHandler(async (req, res) => {
 })
 
 const getYourWorkWebs = asyncHandler(async (req, res) => {
-    const { page=1, limit=4 ,search, sortBy="views", sortOrder="desc"} = req.query;
+    const { page=1, limit=4 , sortBy="views", sortOrder="desc"} = req.query;
     // sortBy = likesCount,views,commentsCount,createdAt
-    let match,sort;
-    if (search) {
-        match = {
-            $and:[
-                {$text:{$search:search}},
-                {owner:new mongoose.Types.ObjectId(req.user?._id)},
-                {isPublic:true}
-            ]
-        };
-    }else{
-        match = {
-            owner:new mongoose.Types.ObjectId(req.user?._id),
-            isPublic:true
-        };
+
+    const webs = await Web.aggregatePaginate([
+        {
+            $match:{
+                owner:new mongoose.Types.ObjectId(req.user?._id)
+            }
+        },
+        {
+            $lookup:{
+                from:"likes",
+                localField:"_id",
+                foreignField:"web",
+                as:"likes"
+            }
+        },
+        {
+            $lookup:{
+                from:"comments",
+                localField:"_id",
+                foreignField:"web",
+                as:"comments"
+            }
+        },
+        {
+            $addFields:{
+                likesCount:{
+                    $size:"$likes"
+                },
+                commentsCount:{
+                    $size:"$comments"
+                },
+                isLikedByMe:{
+                    $cond:{
+                        if:{
+                            $in:[new mongoose.Types.ObjectId(req.user?._id),"$likes.likedBy"]
+                        },
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },
+        {
+            $project:{
+                likes:0,
+                comments:0,
+            }
+        },
+        {
+            $sort:{
+                [sortBy]:sortOrder === "asc" ? 1 : -1
+            }
+        }
+    ],{page:page,limit:limit})
+
+    if (!webs) {
+        throw new ApiError(500,"something went wrong while fetching webs");
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponce(200,webs,"webs found successfully"));
+})
+
+const searchFromWebsCreatedByMe = asyncHandler(async (req, res) => {
+    const { page=1, limit=4 , search} = req.query;
+    // sortBy = likesCount,views,commentsCount,createdAt
+
+    if (!search) {
+        throw new ApiError(400,"search query is required for searching webs");
     }
 
     const webs = await Web.aggregatePaginate([
         {
-            $match:match
-        },
-        {
-            $lookup:{
-                from:"users",
-                localField:"owner",
-                foreignField:"_id",
-                as:"owner",
-                pipeline:[
+            $match:{
+                $and:[
                     {
-                        $project:{
-                            username:1,
-                            fullName:1,
-                            avatar:1,
-                        }
+                        $text:{$search:search}
+                    },
+                    {
+                        owner:new mongoose.Types.ObjectId(req.user?._id)
                     }
                 ]
             }
@@ -702,7 +750,6 @@ const getYourWorkWebs = asyncHandler(async (req, res) => {
                 commentsCount:{
                     $size:"$comments"
                 },
-                owner:{$first:"$owner"},
                 isLikedByMe:{
                     $cond:{
                         if:{
@@ -711,7 +758,8 @@ const getYourWorkWebs = asyncHandler(async (req, res) => {
                         then:true,
                         else:false
                     }
-                }
+                },
+                "score": { "$meta": "textScore" }
             }
         },
         {
@@ -722,7 +770,7 @@ const getYourWorkWebs = asyncHandler(async (req, res) => {
         },
         {
             $sort:{
-                [sortBy]:sortOrder === "asc" ? 1 : -1
+                score:-1
             }
         }
     ],{page:page,limit:limit})
@@ -977,6 +1025,88 @@ const updateWebViewCount = asyncHandler(async (req,res)=>{
     .json(new ApiResponce(200,{},"view count updated successfully"))
 })
 
+const searchFromAllWebs = asyncHandler(async (req, res) => {
+    const { page=1, limit=4 , search, userId} = req.query;
+
+    if (!search) {
+        throw new ApiError(400,"search query is required for searching webs");
+    }
+
+    const webs = await Web.aggregatePaginate([
+        {
+            $match:{
+                $text:{$search:search},
+                isPublic:true
+            }
+        },
+        {
+            $lookup:{
+                from:"users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"owner",
+                pipeline:[
+                    {
+                        $project:{
+                            username:1,
+                            fullName:1,
+                            avatar:1,
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $lookup:{
+                from:"likes",
+                localField:"_id",
+                foreignField:"web",
+                as:"likes"
+            }
+        },
+        {
+            $lookup:{
+                from:"comments",
+                localField:"_id",
+                foreignField:"web",
+                as:"comments"
+            }
+        },
+        {
+            $addFields:{
+                likesCount:{
+                    $size:"$likes"
+                },
+                commentsCount:{
+                    $size:"$comments"
+                },
+                owner:{$first:"$owner"},
+                isLikedByMe:{
+                    $cond:{
+                        if:{
+                            $in:[userId? new mongoose.Types.ObjectId(userId):"","$likes.likedBy"]
+                        },
+                        then:true,
+                        else:false
+                    }
+                },
+                "score": { "$meta": "textScore" }
+            }
+        },
+        {
+            $project:{
+                likes:0,
+                comments:0,
+            }
+        },
+        {
+            $sort:{
+                score:-1
+            }
+        }
+    ],{page:page,limit:limit})
+})
+
 
 export{
     createWeb,
@@ -991,5 +1121,7 @@ export{
     updateWeb,
     deleteWeb,
     togglePublishStatus,
-    updateWebViewCount
+    updateWebViewCount,
+    searchFromWebsCreatedByMe,
+    searchFromAllWebs,
 }

@@ -13,7 +13,9 @@ import {
     updateWeb,
     deleteWeb,
     togglePublishStatus,
-    updateWebViewCount
+    updateWebViewCount,
+    searchFromWebsCreatedByMe,
+    searchFromAllWebs
 } from "../controllers/web.controller.js"
 import {upload} from "../middlewares/multer.middleware.js";
 
@@ -33,6 +35,8 @@ router.route("/update/:webId").patch(verifyJWT,upload.single("image"),updateWeb)
 router.route("/delete/:webId").delete(verifyJWT,deleteWeb);
 router.route("/toggle-publish-status/:webId").patch(verifyJWT,togglePublishStatus);
 router.route("/inc-view/:webId").patch(updateWebViewCount);
+router.route("/my-webs/search").get(verifyJWT,searchFromWebsCreatedByMe);
+router.route("/search").get(searchFromAllWebs);
 
 
 export default router;
