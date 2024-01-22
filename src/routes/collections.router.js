@@ -9,7 +9,9 @@ import {
     toggleCollectionPublishStatus,
     updateViewCount,
     getCollectionByCollectionId,
-    getCollectionWEbsByCollectionId
+    getCollectionWEbsByCollectionId,
+    getCollectionsByUserId,
+    getLikedCollectionsByUserId
 } from "../controllers/collection.controller.js"
 
 
@@ -24,6 +26,8 @@ router.route("/toggle-publish-status/:collectionId").patch(verifyJWT,toggleColle
 router.route("/inc-view/:collectionId").patch(updateViewCount);
 router.route("/get/:collectionId").get(getCollectionByCollectionId);
 router.route("/get-webs/:collectionId").get(getCollectionWEbsByCollectionId);
+router.route("/user-collection/:userId").get(getCollectionsByUserId);
+router.route("/liked/:userId").get(getLikedCollectionsByUserId);
 
 
 

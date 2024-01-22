@@ -4,6 +4,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponce } from '../utils/ApiResponce.js';
 import { Web } from '../models/webs.model.js';
 import mongoose from 'mongoose';
+import { Like } from '../models/likes.model.js';
 
 const createCollection = asyncHandler(async(req,res)=>{
     const {name,description,isPublic=true} = req.body;
@@ -375,7 +376,196 @@ const getCollectionWEbsByCollectionId = asyncHandler(async(req,res)=>{
 
 })
 
+const getCollectionsByUserId = asyncHandler(async(req,res)=>{
+    // get all collections created by user
+    const {userId} = req.params;
+    const {user_id,collectionType="public",sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
+    // sortBy = views,likesCount,websCount,createdAt
+    if (!userId) {
+        throw new ApiError(400,"userId is required");
+    }
 
+    const collections =  await Collection.aggregatePaginate([
+        {
+            $match:{
+                owner:new mongoose.Types.ObjectId(userId),
+                isPublic:collectionType === "public" ? true : false
+            }
+        },
+        {
+            $lookup:{
+                from:"webs",
+                localField:"webs",
+                foreignField:"_id",
+                as:"webs",
+                pipeline:[
+                    {
+                        $sort:{
+                            views:-1
+                        }
+                    },
+                    {
+                        $project:{
+                            title:1,
+                            image:1,
+                            _id:1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            Lookup:{
+                from:"likes",
+                localField:"_id",
+                foreignField:"collection",
+                as:"likes"
+            }
+        },
+        {
+            $addFields:{
+                websCount:{$size:"$webs"},
+                webs:{$slice:["$webs",0,4]},
+                likesCount:{$size:"$likes"},
+                isLiked:{
+                    $cond:{
+                        if:{
+                            $in:[user_id? new mongoose.Types.ObjectId(user_id) : "","$likes.likedBy"]
+                        },
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },
+        {
+            $project:{
+                likes:0
+            }
+        },
+        {
+            $sort:{
+                [sortBy]:sortOrder === "asc" ? 1 : -1
+            }
+        }
+    ],{page:page,limit:limit})
+
+    if (!collections) {
+        throw new ApiError(404,"Collections not found");
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponce(200,collections,"Collections fetched successfully"))
+})
+
+const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
+    // get all collections liked by user
+    const {userId} = req.params;
+    const {user_id,sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
+    // sortBy = views,likesCount,websCount,createdAt
+    if (!userId) {
+        throw new ApiError(400,"userId is required");
+    }
+
+    const likedCollections = await Like.aggregatePaginate([
+        {
+            $match:{
+                likedBy:new mongoose.Types.ObjectId(userId),
+                collection:{$exists:true}
+            }
+        },
+        {
+            $lookup:{
+                from:"collections",
+                localField:"collection",
+                foreignField:"_id",
+                as:"collection",
+                pipeline:[
+                    {
+                        $match:{
+                            isPublic:true
+                        }
+                    },
+                    {
+                        $lookup:{
+                            from:"webs",
+                            localField:"webs",
+                            foreignField:"_id",
+                            as:"webs",
+                            pipeline:[
+                                {
+                                    $sort:{
+                                        views:-1
+                                    }
+                                },
+                                {
+                                    $project:{
+                                        title:1,
+                                        image:1,
+                                        _id:1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        Lookup:{
+                            from:"likes",
+                            localField:"_id",
+                            foreignField:"collection",
+                            as:"likes"
+                        }
+                    },
+                    {
+                        $addFields:{
+                            websCount:{$size:"$webs"},
+                            webs:{$slice:["$webs",0,4]},
+                            likesCount:{$size:"$likes"},
+                            isLiked:{
+                                $cond:{
+                                    if:{
+                                        $in:[user_id? new mongoose.Types.ObjectId(user_id) : "","$likes.likedBy"]
+                                    },
+                                    then:true,
+                                    else:false
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $project:{
+                            likes:0
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields:{
+                collection:{$first:"$collection"}
+            }
+        },
+        {
+            $replaceRoot:{
+                newRoot:"$collection"
+            }
+        },
+        {
+            $sort:{
+                [sortBy]:sortOrder === "asc" ? 1 : -1
+            }
+        }
+    ],{page:page,limit:limit})
+
+    if (!likedCollections) {
+        throw new ApiError(404,"Liked collections not found");
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponce(200,likedCollections,"Liked collections fetched successfully"))
+})
 
 export {
     createCollection,
@@ -387,5 +577,6 @@ export {
     updateViewCount,
     getCollectionByCollectionId,
     getCollectionWEbsByCollectionId,
-    
+    getCollectionsByUserId,
+    getLikedCollectionsByUserId,
 }

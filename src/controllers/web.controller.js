@@ -200,8 +200,9 @@ const getWebByWebId = asyncHandler(async (req, res) => {
 
 
 const getAllWebsByUserId = asyncHandler(async (req, res) => {
-    const { user_id, webType = "public", sortBy="views", sortType="desc", page=1, limit=4 } = req.query;
+    const { user_id, webType = "public", sortBy="views", sortOrder="desc", page=1, limit=4 } = req.query;
     const { userId } = req.params;
+    // sortBy = views, createdAt, likesCount, commentsCount
     // return array of webs created by usee (userId)
     // webType: public, private, forked
     // userId = the user whose webs are to be fetched
@@ -211,31 +212,13 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
         throw new ApiError(400,"userId is required");
     }
 
-    let match,sort;
-
-    if (sortBy === "views") {
-        sort = {
-            views:sortType === "asc" ? 1 : -1
-        }
-    } else if (sortBy === "likes") {
-        sort = {
-            likesCount:sortType === "asc" ? 1 : -1
-        }
-    } else{
-        sort = {
-            createdAt:sortType === "asc" ? 1 : -1
-        }
-    }
-
+    let match;
     if (webType === "private") {
         match = {
             $match:{
                 owner:new mongoose.Types.ObjectId(userId),
                 isPublic:false
             }
-        }
-        sort = {
-            updatedAt:sortType === "asc" ? 1 : -1
         }
     } else if (webType === "forked") {
         match = {
@@ -317,7 +300,9 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
         }
     },
     {
-        $sort:sort
+        $sort:{
+            [sortBy]:sortOrder === "asc" ? 1 : -1
+        }
     }
     ],{page:page,limit:limit});
 
@@ -333,12 +318,17 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
 
 const getLikedWebs = asyncHandler(async (req, res) => {
     // return array of webs liked by user
-    const { page=1, limit=4 } = req.query;
+    const {userId} = req.params;
+    const {user_id,sortBy="createdAt",sortOrder="desc", page=1, limit=4 } = req.query;
+
+    if (!userId) {
+        throw new ApiError(400,"userId is required");
+    }
     
     const likedWebs = await Like.aggregatePaginate([
         {
             $match:{
-                likedBy:new mongoose.Types.ObjectId(req.user?._id),
+                likedBy:new mongoose.Types.ObjectId(userId),
                 web:{$exists:true}
             }
         },
@@ -347,8 +337,13 @@ const getLikedWebs = asyncHandler(async (req, res) => {
                 from:"webs",
                 localField:"web",
                 foreignField:"_id",
-                as:"webs",
+                as:"web",
                 pipeline:[
+                    {
+                        $match:{
+                            isPublic:true
+                        }
+                    },
                     {
                         $lookup:{
                             from:"users",
@@ -394,7 +389,7 @@ const getLikedWebs = asyncHandler(async (req, res) => {
                             isLikedByMe:{
                                 $cond:{
                                     if:{
-                                        $in:[new mongoose.Types.ObjectId(req.user?._id),"$likes.likedBy"]
+                                        $in:[user_id? new mongoose.Types.ObjectId(user_id) : "","$likes.likedBy"]
                                     },
                                     then:true,
                                     else:false
@@ -414,13 +409,18 @@ const getLikedWebs = asyncHandler(async (req, res) => {
         {
             $addFields:{
                 web:{
-                    $first:"$webs"
+                    $first:"$web"
                 }
             }
         },
         {
             $replaceRoot:{
                 newRoot:"$web"
+            }
+        },
+        {
+            $sort:{
+                [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
     ],{page:page,limit:limit})
@@ -440,18 +440,8 @@ const getLikedWebs = asyncHandler(async (req, res) => {
 
 const getFollowingWebs = asyncHandler(async (req, res) => {
     // return array of webs created by following users
-    const { sortBy="top", sortType="desc", page=1, limit=4 } = req.query;
-
-    let sort;
-    if (sortBy=== "top") {
-        sort = {
-            views:sortType === "asc" ? 1 : -1
-        }
-    }else if (sortBy === "latest") {
-        sort = {
-            createdAt:sortType === "asc" ? 1 : -1
-        }
-    }
+    const { sortBy="views", sortOrder="desc", page=1, limit=4 } = req.query;
+    // sortBy= views, createdAt, likesCount, commentsCount
     
     const followingWebs = await Follower.aggregatePaginate([
         {
@@ -542,7 +532,9 @@ const getFollowingWebs = asyncHandler(async (req, res) => {
             }
         },
         {
-            $sort:sort
+            $sort:{
+                [sortBy]:sortOrder === "asc" ? 1 : -1
+            }
         }
     ],{page:page,limit:limit})
 
@@ -648,6 +640,7 @@ const getTrendingWebs = asyncHandler(async (req, res) => {
 
 const getYourWorkWebs = asyncHandler(async (req, res) => {
     const { page=1, limit=4 ,search, sortBy="views", sortOrder="desc"} = req.query;
+    // sortBy = likesCount,views,commentsCount,createdAt
     let match,sort;
     if (search) {
         match = {
@@ -662,20 +655,6 @@ const getYourWorkWebs = asyncHandler(async (req, res) => {
             owner:new mongoose.Types.ObjectId(req.user?._id),
             isPublic:true
         };
-    }
-
-    if (sortBy === "views") {
-        sort = {
-            views:sortOrder === "asc" ? 1 : -1
-        }  
-    } else if (sortBy === "likes") {
-        sort = {
-            likesCount:sortOrder === "asc" ? 1 : -1
-        }
-    } else{
-        sort = {
-            createdAt:sortOrder === "asc" ? 1 : -1
-        }
     }
 
     const webs = await Web.aggregatePaginate([
@@ -742,7 +721,9 @@ const getYourWorkWebs = asyncHandler(async (req, res) => {
             }
         },
         {
-            $sort:sort
+            $sort:{
+                [sortBy]:sortOrder === "asc" ? 1 : -1
+            }
         }
     ],{page:page,limit:limit})
 

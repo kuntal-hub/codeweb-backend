@@ -26,7 +26,7 @@ router.route("/get/:webId").get(getWebByWebId);
 router.route("/following").get(verifyJWT,getFollowingWebs);
 router.route("/trending").get(getTrendingWebs);
 router.route("/user/:userId").get(getAllWebsByUserId);
-router.route("/liked").get(verifyJWT,getLikedWebs);
+router.route("/liked/:userId").get(getLikedWebs);
 router.route("/your-work").get(verifyJWT,getYourWorkWebs);
 router.route("/recomended-people").get(verifyJWT,RecomendedpeopleToFollow);
 router.route("/update/:webId").patch(verifyJWT,upload.single("image"),updateWeb);
