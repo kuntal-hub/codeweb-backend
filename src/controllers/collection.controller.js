@@ -364,7 +364,10 @@ const getCollectionWEbsByCollectionId = asyncHandler(async(req,res)=>{
                 comments:0
             }
         }
-    ],{page:page,limit:limit});
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    });
 
     if (!webs) {
         throw new ApiError(404,"Webs not found");
@@ -448,7 +451,10 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
                 [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
-    ],{page:page,limit:limit})
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    })
 
     if (!collections) {
         throw new ApiError(404,"Collections not found");
@@ -524,7 +530,10 @@ const getCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
                 [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
-    ],{page:page,limit:limit})
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    })
 
     if (!collections) {
         throw new ApiError(404,"Collections not found");
@@ -632,7 +641,10 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
                 [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
-    ],{page:page,limit:limit})
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    })
 
     if (!likedCollections) {
         throw new ApiError(404,"Liked collections not found");
@@ -732,7 +744,10 @@ const searchFromAllCollections = asyncHandler(async(req,res)=>{
         {
             $sort:{score:-1}
         }
-    ],{page:page,limit:limit});
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    });
 
     if (!collections) {
         throw new ApiError(404,"Collections not found");
@@ -813,7 +828,10 @@ const searchFromAllCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
         {
             $sort:{score:-1}
         }
-    ],{page:page,limit:limit});
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    });
 
     if (!collections) {
         throw new ApiError(404,"Collections not found");

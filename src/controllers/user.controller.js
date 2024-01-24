@@ -739,7 +739,10 @@ const getPinedItems = asyncHandler(async(req,res)=>{
                 ]
             }
         }
-    ],{page:page,limit:limit})
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    });
     // check if user exists or not
     if (user.length === 0) {
         throw new ApiError(400,"user dose not exists");

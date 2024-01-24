@@ -304,7 +304,10 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
             [sortBy]:sortOrder === "asc" ? 1 : -1
         }
     }
-    ],{page:page,limit:limit});
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    });
 
     if (!webs) {
         throw new ApiError(500,"something went wrong while fetching webs");
@@ -423,7 +426,10 @@ const getLikedWebs = asyncHandler(async (req, res) => {
                 [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
-    ],{page:page,limit:limit})
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    })
 
     if (!likedWebs) {
         throw new ApiError(500,"something went wrong while fetching webs");
@@ -536,7 +542,10 @@ const getFollowingWebs = asyncHandler(async (req, res) => {
                 [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
-    ],{page:page,limit:limit})
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    })
 
     if (!followingWebs) {
         throw new ApiError(500,"something went wrong while fetching webs");
@@ -627,7 +636,10 @@ const getTrendingWebs = asyncHandler(async (req, res) => {
                 createdAt:-1
             }
         }
-    ],{page:page,limit:limit})
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    })
 
     if (!webs) {
         throw new ApiError(500,"something went wrong while fetching webs");
@@ -694,7 +706,10 @@ const getYourWorkWebs = asyncHandler(async (req, res) => {
                 [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
-    ],{page:page,limit:limit})
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    })
 
     if (!webs) {
         throw new ApiError(500,"something went wrong while fetching webs");
@@ -773,7 +788,10 @@ const searchFromWebsCreatedByMe = asyncHandler(async (req, res) => {
                 score:-1
             }
         }
-    ],{page:page,limit:limit})
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    })
 
     if (!webs) {
         throw new ApiError(500,"something went wrong while fetching webs");
@@ -876,7 +894,10 @@ const RecomendedpeopleToFollow = asyncHandler(async (req, res) => {
                 showcaseWebs:1
             }
         }
-    ],{page:page,limit:limit})
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    })
 
     if (!users) {
         throw new ApiError(500,"something went wrong while fetching users");
@@ -1104,7 +1125,10 @@ const searchFromAllWebs = asyncHandler(async (req, res) => {
                 score:-1
             }
         }
-    ],{page:page,limit:limit})
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    })
 })
 
 
