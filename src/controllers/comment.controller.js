@@ -3,6 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponce } from '../utils/ApiResponce.js';
 import mongoose from 'mongoose';
 import {Comment} from "../models/comments.model.js";
+import {Replay} from "../models/replays.model.js";
 
 const createComment = asyncHandler(async (req, res) => {
     const {text,web} = req.body;
@@ -66,6 +67,10 @@ const deleteComment = asyncHandler(async (req, res) => {
     if (!deletedComment) {
         throw new ApiError(500, 'Something went wrong while deleting comment');
     }
+
+    await Replay.deleteMany({
+        comment:new mongoose.Types.ObjectId(commentId)
+    })
 
     return res
         .status(200)
@@ -159,9 +164,155 @@ const getAllWebComments = asyncHandler(async (req, res) => {
 
 })
 
+const getCommentById = asyncHandler(async (req, res) => {
+    const {commentId} = req.params;
+
+    if (!commentId || !mongoose.isValidObjectId(commentId)) {
+        throw new ApiError(400, 'Comment id is required');
+    }
+
+    const comment = await Comment.aggregate([
+        {
+            $match:{
+                _id:new mongoose.Types.ObjectId(commentId)
+            }
+        },
+        {
+            $lookup:{
+                from:"users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"owner",
+                pipeline:[
+                    {
+                        $project:{
+                            username:1,
+                            fullName:1,
+                            avatar:1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $lookup:{
+                from:"likes",
+                localField:"_id",
+                foreignField:"comment",
+                as:"likes"
+            }
+        },
+        {
+            $lookup:{
+                from:"replays",
+                localField:"_id",
+                foreignField:"comment",
+                as:"replays",
+                pipeline:[
+                    {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        username:1,
+                                        fullName:1,
+                                        avatar:1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $lookup:{
+                            from:"likes",
+                            localField:"_id",
+                            foreignField:"replay",
+                            as:"likes"
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner:{
+                                $first:"$owner"
+                            },
+                            likesCount:{
+                                $size:"$likes"
+                            },
+                            isLikedByMe:{
+                                $cond:{
+                                    if:{
+                                        $in:[new mongoose.Types.ObjectId(req.user?._id),"$likes.likedBy"]
+                                    },
+                                    then:true,
+                                    else:false
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $project:{
+                            likes:0
+                        }
+                    },
+                    {
+                        $sort:{
+                            createdAt:-1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields:{
+                likesCount:{
+                    $size:"$likes"
+                },
+                replaysCount:{
+                    $size:"$replays"
+                },
+                owner:{
+                    $first:"$owner"
+                },
+                isLikedByMe:{
+                    $cond:{
+                        if:{
+                            $in:[new mongoose.Types.ObjectId(req.user?._id),"$likes.likedBy"]
+                        },
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },
+        {
+            $project:{
+                likes:0
+            }
+        },
+        {
+            $sort:{
+                createdAt:-1
+            }
+        }
+    ]);
+
+    if (!comment) {
+        throw new ApiError(404, 'Comment not found');
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponce(200,comment, 'Comment fetched successfully'));
+})
+
 export {
     createComment,
     updateComment,
     deleteComment,
-    getAllWebComments
+    getAllWebComments,
+    getCommentById
 }

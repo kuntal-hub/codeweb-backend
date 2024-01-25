@@ -554,40 +554,15 @@ const updateCoverImage = asyncHandler(async(req,res)=>{
 const getUserProfile = asyncHandler(async(req,res)=>{
     // get username from req.params
     const {username} = req.params;
+    // get currentUser from req.query
+    const {currentUser} = req.query;
     // check if username exists or not
     if (!username) {
         throw new ApiError(400,"username is required");
     }
-    let currentUser;
-
-    try {
-        // get token from header or cookie
-        const token=req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ","")
-        // check if token exists
-        if (!token) {
-            throw new ApiError(403,"Unauthorized request");
-        }
-        // verify token
-        const decodedToken = jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
-        // check if token is valid
-        if (!decodedToken) throw new ApiError(403,"Unauthorized request");
-        // find user
-        const user = await User.findOne({$and:[{_id:new mongoose.Types.ObjectId(decodedToken?._id)},{refreshToken:{$exists:true}}]})
-        .select("_id username email");
-        // check if user exists
-        if (!user) {
-            throw new ApiError(403,"Unauthorized request");
-        }
-        // set user to req.user
-        currentUser = user;
-
-    } catch (error) {
-        // if error then set currentUser to null
-        currentUser = null;
-    }
 
     let isFollowing,isLiked;
-
+    // check if currentUser exists or not and set isFollowing and isLiked
     if(currentUser){
         isFollowing = {
             $cond: {

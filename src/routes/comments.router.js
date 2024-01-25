@@ -4,7 +4,8 @@ import {
     createComment,
     updateComment,
     deleteComment,
-    getAllWebComments
+    getAllWebComments,
+    getCommentById
 } from "../controllers/comment.controller.js"
 
 const router = Router();
@@ -15,6 +16,7 @@ router.route("/create").post(createComment);
 router.route("/update").patch(updateComment);
 router.route("/delete/:commentId").delete(deleteComment);
 router.route("/get-comments").get(getAllWebComments);
+router.route("/get/:commentId").get(getCommentById);
 
 
 
