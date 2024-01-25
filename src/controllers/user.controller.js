@@ -789,6 +789,7 @@ const updateShowcase = asyncHandler(async(req,res)=>{
     .json(new ApiResponce(200,user,"Showcase updated successfully"));
 })
 
+
 export {
     registerUser,
     loginUser,
