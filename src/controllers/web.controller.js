@@ -5,6 +5,7 @@ import { ApiResponce } from '../utils/ApiResponce.js';
 import mongoose from 'mongoose';
 import {Web} from "../models/webs.model.js";
 import {Like} from "../models/likes.model.js";
+import {Comment} from "../models/comments.model.js";
 import { User } from '../models/users.model.js';
 import {Follower} from "../models/followers.model.js";
 import {uploadOnCloudinary,deleteFromCloudinary} from "../utils/cloudinary.js"
@@ -77,7 +78,7 @@ const createForkedWeb = asyncHandler(async (req, res) => {
         public_id:web.public_id,
         owner:new mongoose.Types.ObjectId(req.user?._id),
         isPublic:true,
-        forkedFrom:web._id
+        forkedFrom:new mongoose.Types.ObjectId(webId)
     });
     // check forked web is created or not
     if (!forkedWeb) {
@@ -91,13 +92,15 @@ const createForkedWeb = asyncHandler(async (req, res) => {
 });
 
 const getWebByWebId = asyncHandler(async (req, res) => {
+    // get webId from req.params
     const { webId } = req.params;
+    // get userId from req.query
     const {userId} = req.query;
-    
+    // check webId is provided or not
     if (!webId) {
         throw new ApiError(400,"webId is required");
     }
-
+    // get web by webId from database
     const web = await Web.aggregate([
         {
             $match:{
@@ -188,11 +191,11 @@ const getWebByWebId = asyncHandler(async (req, res) => {
             }
         }
     ])
-
+    // check web is found or not
     if (web.length < 1) {
         throw new ApiError(404,"web not found");
     }
-
+    // send response
     return res
     .status(200)
     .json(new ApiResponce(200,web[0],"web found successfully"));
@@ -200,19 +203,22 @@ const getWebByWebId = asyncHandler(async (req, res) => {
 
 
 const getAllWebsByUserId = asyncHandler(async (req, res) => {
+    // get user_id, webType, sortBy, sortOrder, page, limit from req.query
     const { user_id, webType = "public", sortBy="views", sortOrder="desc", page=1, limit=4 } = req.query;
+    // get userId from req.params
     const { userId } = req.params;
     // sortBy = views, createdAt, likesCount, commentsCount
     // return array of webs created by usee (userId)
     // webType: public, private, forked
     // userId = the user whose webs are to be fetched
     // user_id = the user who is requesting for webs
-
+    // check userId is provided or not
     if (!userId) {
         throw new ApiError(400,"userId is required");
     }
-
+    // check webType is valid or not
     let match;
+    // if webType is private then select only private webs
     if (webType === "private") {
         match = {
             $match:{
@@ -220,6 +226,7 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
                 isPublic:false
             }
         }
+        // if webType is forked then select only forked webs
     } else if (webType === "forked") {
         match = {
             $match:{
@@ -227,6 +234,7 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
                 forkedFrom:{$exists:true}
             }
         }
+        // if webType is public then select only public webs
     } else if(webType === "public"){
         match = {
             $match:{
@@ -234,10 +242,11 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
                 isPublic:true
             }
         }
+        // if webType is invalid then throw error
     }else{
         throw new ApiError(400,"invalid webType");
     }
-
+    // get webs
     const webs = await Web.aggregatePaginate([
     match,
     {
@@ -308,12 +317,12 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
         page:parseInt(page),
         limit:parseInt(limit)
     });
-
+    // check webs are found or not
     if (!webs) {
         throw new ApiError(500,"something went wrong while fetching webs");
         
     }
-
+    //return response
     return res
     .status(200)
     .json(new ApiResponce(200,webs,"webs found successfully"));
@@ -321,13 +330,15 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
 
 const getLikedWebs = asyncHandler(async (req, res) => {
     // return array of webs liked by user
+    // get userId from req.params
     const {userId} = req.params;
+    // get user_id, sortBy, sortOrder, page, limit from req.query
     const {user_id,sortBy="createdAt",sortOrder="desc", page=1, limit=4 } = req.query;
-
+    // sortBy = views, createdAt, likesCount, commentsCount
     if (!userId) {
         throw new ApiError(400,"userId is required");
     }
-    
+    // get liked webs
     const likedWebs = await Like.aggregatePaginate([
         {
             $match:{
@@ -546,7 +557,7 @@ const getFollowingWebs = asyncHandler(async (req, res) => {
         page:parseInt(page),
         limit:parseInt(limit)
     })
-
+    
     if (!followingWebs) {
         throw new ApiError(500,"something went wrong while fetching webs");
     }
@@ -560,7 +571,6 @@ const getFollowingWebs = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(new ApiResponce(200,followingWebs,"webs found successfully"));
-
 })
 
 const getTrendingWebs = asyncHandler(async (req, res) => {
@@ -995,7 +1005,9 @@ const deleteWeb = asyncHandler(async (req, res) => {
         throw new ApiError(500,"something went wrong while deleting web");
     }
     // delete likes of web
-    await Like.deleteMany({web:webId});
+    await Like.deleteMany({web:new mongoose.Types.ObjectId(webId)});
+    // delete comments of web
+    await Comment.deleteMany({web:new mongoose.Types.ObjectId(webId)});
     // return response
     return res
     .status(200)

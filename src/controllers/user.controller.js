@@ -5,7 +5,13 @@ import {ApiResponce} from "../utils/ApiResponce.js";
 import {ApiError} from "../utils/ApiError.js";
 import mongoose from "mongoose";
 import {sendMail} from "../utils/nodemailer.js";
-import {Web} from "../models/webs.model.js"
+import {Web} from "../models/webs.model.js";
+import {Follower} from "../models/followers.model.js";
+import {Like} from "../models/likes.model.js"
+import {Comment} from "../models/comments.model.js";
+import {Collection} from "../models/collecntions.model.js";
+import {Asset} from "../models/assets.model.js";
+import {Replay} from "../models/replays.model.js";
 import {deleteFromCloudinary } from "../utils/cloudinary.js";
 
 function validateEmail(email) {
@@ -457,10 +463,24 @@ const deleteUser = asyncHandler(async(req,res)=>{
     }
     // if everything is fine then delete user
     const deletedUser = await User.findByIdAndDelete(user._id);
-
+    // check if user deleted or not
     if (!deletedUser) {
         throw new ApiError(400,"Something went wrong while deleting user");
     }
+    // delete user's webs
+    await Web.deleteMany({owner:new mongoose.Types.ObjectId(user._id)});
+    // delete user's followers and following
+    await Follower.deleteMany({$or:[{profile:new mongoose.Types.ObjectId(user._id)},{followedBy:new mongoose.Types.ObjectId(user._id)}]});
+    // delete user's likes
+    await Like.deleteMany({likedBy:new mongoose.Types.ObjectId(user._id)});
+    // delete user's comments
+    await Comment.deleteMany({owner:new mongoose.Types.ObjectId(user._id)});
+    // delete user's collections
+    await Collection.deleteMany({owner:new mongoose.Types.ObjectId(user._id)});
+    // delete user's assets
+    await Asset.deleteMany({owner:new mongoose.Types.ObjectId(user._id)});
+    // delete user's replays
+    await Replay.deleteMany({owner:new mongoose.Types.ObjectId(user._id)});
     // send response
     return res
     .status(200)

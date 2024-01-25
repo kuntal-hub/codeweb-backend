@@ -6,12 +6,13 @@ import {Asset} from "../models/assets.model.js";
 import { Like } from '../models/likes.model.js';
 
 const createAsset = asyncHandler(async(req,res)=>{
+    // get title,assetType,assetURL,assetPublicId,isPublic from body
     const {title,assetType,assetURL,assetPublicId,isPublic=true} = req.body;
-
+    // check if title,assetType,assetURL,assetPublicId is present or not
     if (!title || !assetType || !assetURL || !assetPublicId) {
         throw new ApiError(400,"Please provide all the required fields");
     }
-
+    // create asset
     const asset = await Asset.create({
         title,
         assetType,
@@ -20,11 +21,11 @@ const createAsset = asyncHandler(async(req,res)=>{
         isPublic,
         owner:new mongoose.Types.ObjectId(req.user?._id)
     });
-
+    // check if asset is created or not
     if (!asset) {
         throw new ApiError(500,"Something went wrong while creating the asset");
     }
-
+    // return response
     return res
         .status(201)
         .json(new ApiResponce(201,asset,"Asset created successfully"));
@@ -32,8 +33,9 @@ const createAsset = asyncHandler(async(req,res)=>{
 })
 
 const getAllAssetsCreatedByUser = asyncHandler(async(req,res)=>{
+    // get page and limit from query
     const  {page=1,limit=20,assetType="image"} = req.query;
-
+    // get assets created by user
     const assets = Asset.aggregatePaginate([
         {
             $match:{
@@ -77,19 +79,20 @@ const getAllAssetsCreatedByUser = asyncHandler(async(req,res)=>{
         page:parseInt(page),
         limit:parseInt(limit)
     });
-
+    // check if assets is present or not
     if (!assets) {
         throw new ApiError(500,"Something went wrong while fetching the assets");
     }
-
+    // return response
     return res
         .status(200)
         .json(new ApiResponce(200,assets,"Assets fetched successfully"));
 })
 
 const getAllPublicAssets = asyncHandler(async(req,res)=>{
+    // get page and limit from query
     const {page=1,limit=20,assetType="image"} = req.query;
-
+    // get all public assets
     const assets = Asset.aggregatePaginate([
         {
             $match:{
@@ -133,19 +136,20 @@ const getAllPublicAssets = asyncHandler(async(req,res)=>{
         page:parseInt(page),
         limit:parseInt(limit)
     });
-
+    // check if assets is present or not
     if (!assets) {
         throw new ApiError(500,"Something went wrong while fetching the assets");
     }
-
+    // return response
     return res
         .status(200)
         .json(new ApiResponce(200,assets,"Assets fetched successfully"));
 })
 
 const searchFromPublicAssets = asyncHandler(async(req,res)=>{
+    // get page and limit and search query from query
     const {page=1,limit=20,assetType="image",search=""} = req.query;
-
+    // get all public assets which matches the search query
     const assets = Asset.aggregatePaginate([
         {
             $match:{
@@ -202,11 +206,11 @@ const searchFromPublicAssets = asyncHandler(async(req,res)=>{
         page:parseInt(page),
         limit:parseInt(limit)
     });
-
+    // check if assets is present or not
     if (!assets) {
         throw new ApiError(500,"Something went wrong while fetching the assets");
     }
-
+    // return response
     return res
         .status(200)
         .json(new ApiResponce(200,assets,"Assets fetched successfully"));
@@ -214,12 +218,13 @@ const searchFromPublicAssets = asyncHandler(async(req,res)=>{
 
 
 const getAssetById = asyncHandler(async(req,res)=>{
+    // get assetId from params
     const {assetId} = req.params;
-
+    // check if assetId is present or not
     if (!assetId) {
         throw new ApiError(400,"Please provide assetId");
     }
-
+    // get asset by assetId
     const asset = await Asset.aggregate([
         {
             $match:{
@@ -306,32 +311,37 @@ const getAssetById = asyncHandler(async(req,res)=>{
             }
         }
     ])
-
+    // check if asset is present or not
     if (!asset) {
         throw new ApiError(400,"asset not found invalid assetId");
     }
-
+    // return response
     return res
         .status(200)
         .json(new ApiResponce(200,asset,"Asset fetched successfully"));
 })
 
 const deleteAssetById = asyncHandler(async(req,res)=>{
+    // get assetId from params
     const {assetId} = req.params;
-
+    // check if assetId is present or not
     if (!assetId) {
         throw new ApiError(400,"Please provide assetId");
     }
-
+    // delete asset by assetId
     const deletedAsset = await Asset.findOneAndDelete({
         _id:new mongoose.Types.ObjectId(assetId),
         owner:new mongoose.Types.ObjectId(req.user?._id)
     });
-
+    // check if asset is deleted or not
     if (!deletedAsset) {
         throw new ApiError(400,"asset not found invalid assetId or you are not the owner of the asset");
-    }
-
+    }   
+    // delete all likes of the asset
+    await Like.deleteMany({
+        asset:new mongoose.Types.ObjectId(assetId)
+    })
+    // return response
     return res
         .status(200)
         .json(new ApiResponce(200,{},"Asset deleted successfully"));
@@ -339,39 +349,42 @@ const deleteAssetById = asyncHandler(async(req,res)=>{
 
 
 const updateAssetById = asyncHandler(async(req,res)=>{
+    // get assetId from params
     const {assetId} = req.params;
+    // get title and isPublic from body
     const {title,isPublic=true} = req.body;
-
+    // check if assetId is present or not
     if (!assetId) {
         throw new ApiError(400,"Please provide assetId");
     }
-
+    // get asset by assetId
     const asset = await Asset.findOne({
         _id:new mongoose.Types.ObjectId(assetId),
         owner:new mongoose.Types.ObjectId(req.user?._id)
     });
-
+    // check if asset is present or not
     if (!asset) {
         throw new ApiError(400,"asset not found invalid assetId or you are not the owner of the asset");
     }
-
+    // update asset
     asset.title = title? title : asset.title;
     asset.isPublic = isPublic;
-
+    // save asset
     const savedAsset = await asset.save({validateBeforeSave:false});
-
+    // check if asset is saved or not
     if (!savedAsset) {
         throw new ApiError(500,"Something went wrong while updating the asset");
     }
-
+    // return response
     return res
         .status(200)
         .json(new ApiResponce(200,savedAsset,"Asset updated successfully"));
 })
 
 const getLikedAssets = asyncHandler(async(req,res)=>{
+    // get page and limit from query
     const {page=1,limit=20,assetType="image"} = req.query;
-
+    // get all liked assets
     const assets = Like.aggregatePaginate([
         {
             $match:{
@@ -450,12 +463,12 @@ const getLikedAssets = asyncHandler(async(req,res)=>{
         page:parseInt(page),
         limit:parseInt(limit)
     });
-
+    // check if assets is present or not
     if (!assets) {
         throw new ApiError(500,"Something went wrong while fetching the assets");
         
     }
-    
+    // return response
     return res
         .status(200)
         .json(new ApiResponce(200,assets,"Assets fetched successfully"));
