@@ -3,6 +3,7 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponce } from '../utils/ApiResponce.js';
 import mongoose from 'mongoose';
 import {Asset} from "../models/assets.model.js";
+import { Like } from '../models/likes.model.js';
 
 const createAsset = asyncHandler(async(req,res)=>{
     const {title,assetType,assetURL,assetPublicId,isPublic=true} = req.body;
@@ -368,6 +369,98 @@ const updateAssetById = asyncHandler(async(req,res)=>{
         .json(new ApiResponce(200,savedAsset,"Asset updated successfully"));
 })
 
+const getLikedAssets = asyncHandler(async(req,res)=>{
+    const {page=1,limit=20,assetType="image"} = req.query;
+
+    const assets = Like.aggregatePaginate([
+        {
+            $match:{
+                likedBy:new mongoose.Types.ObjectId(req.user?._id),
+                asset:{$exists:true}
+            }
+        },
+        {
+            $lookup:{
+                from:"assets",
+                localField:"asset",
+                foreignField:"_id",
+                as:"asset",
+                pipeline:[
+                    {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        username:1,
+                                        fullName:1,
+                                        avatar:1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $lookup:{
+                            from:"likes",
+                            localField:"_id",
+                            foreignField:"asset",
+                            as:"likes"
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner:{$first:"$owner"},
+                            likesCount:{$size:"$likes"},
+                            isLikedByMe:true
+                        }
+                    },
+                    {
+                        $project:{
+                            likes:0
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields:{
+                asset:{$first:"$asset"}
+            }
+        },
+        {
+            $replaceRoot:{
+                newRoot:"$asset"
+            }
+        },
+        {
+            $match:{
+                assetType:assetType
+            }
+        },
+        {
+            $sort:{
+                createdAt:-1
+            }
+        }
+    ],{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    });
+
+    if (!assets) {
+        throw new ApiError(500,"Something went wrong while fetching the assets");
+        
+    }
+    
+    return res
+        .status(200)
+        .json(new ApiResponce(200,assets,"Assets fetched successfully"));
+})
+
 export {
     createAsset,
     getAllAssetsCreatedByUser,
@@ -376,4 +469,5 @@ export {
     getAssetById,
     deleteAssetById,
     updateAssetById,
+    getLikedAssets
 }

@@ -7,7 +7,8 @@ import {
     searchFromPublicAssets,
     getAssetById,
     deleteAssetById,
-    updateAssetById
+    updateAssetById,
+    getLikedAssets
 } from "../controllers/asset.controller.js";
 
 
@@ -22,6 +23,7 @@ router.route("/assets/search").get(searchFromPublicAssets);
 router.route("/asset/:assetId").get(getAssetById);
 router.route("/delete/:assetId").delete(deleteAssetById);
 router.route("/update/:assetId").put(updateAssetById);
+router.route("/liked-assets").get(getLikedAssets);
 
 
 export default router;

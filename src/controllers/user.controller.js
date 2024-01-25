@@ -6,7 +6,7 @@ import {ApiError} from "../utils/ApiError.js";
 import mongoose from "mongoose";
 import {sendMail} from "../utils/nodemailer.js";
 import {Web} from "../models/webs.model.js"
-import {uploadOnCloudinary,deleteFromCloudinary } from "../utils/cloudinary.js";
+import {deleteFromCloudinary } from "../utils/cloudinary.js";
 
 function validateEmail(email) {
     // Regular expression for a basic email validation
