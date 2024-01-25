@@ -38,7 +38,7 @@ const createWeb = asyncHandler(async (req, res) => {
         js:js || "",
         image:image.secure_url,
         public_id:image.public_id,
-        owner:req.user?._id,
+        owner:new mongoose.Types.ObjectId(req.user?._id),
         isPublic:isPublic
     });
     // check web is created or not
@@ -75,7 +75,7 @@ const createForkedWeb = asyncHandler(async (req, res) => {
         js:web.js,
         image:web.image,
         public_id:web.public_id,
-        owner:req.user?._id,
+        owner:new mongoose.Types.ObjectId(req.user?._id),
         isPublic:true,
         forkedFrom:web._id
     });

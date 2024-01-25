@@ -18,7 +18,7 @@ const createAsset = asyncHandler(async(req,res)=>{
         assetURL,
         assetPublicId,
         isPublic,
-        owner:req.user?._id
+        owner:new mongoose.Types.ObjectId(req.user?._id)
     });
 
     if (!asset) {

@@ -21,7 +21,7 @@ const createCollection = asyncHandler(async(req,res)=>{
         name:name,
         description:description || "",
         isPublic,
-        owner:req.user?._id
+        owner:new mongoose.Types.ObjectId(req.user?._id)
     });
 
     if (!collection) {
