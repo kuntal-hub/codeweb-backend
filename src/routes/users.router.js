@@ -40,7 +40,7 @@ router.route("/reset-password").post(resetPassword);
 router.route("/update").patch(verifyJWT,Updateduser);
 router.route("/update-avatar").patch(verifyJWT,updateAvatar);
 router.route("/update-cover-image").patch(verifyJWT,updateCoverImage);
-router.route("/getuser/:username").get(getUserProfile);
+router.route("/profile/:username").get(getUserProfile);
 router.route("/pined").get(verifyJWT,getPinedItems);
 router.route("/add-to-pined/:webId").patch(verifyJWT,addToPinedItems);
 router.route("/remove-pined/:webId").patch(verifyJWT,removePinedItem);

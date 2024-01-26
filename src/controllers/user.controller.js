@@ -22,6 +22,23 @@ function validateEmail(email) {
     return emailRegex.test(email);
 }
 
+function isValidUsername(inputString) {
+    // Check if the string starts or ends with "-"
+    if (inputString.startsWith('-') || inputString.endsWith('-')) {
+      return false;
+    }
+    // Check if the string contains spaces, special characters (except "-"), or capital letters
+    if (/[\sA-Z!@#$%^&*()_+={}[\]:;<>,.?~\\\/]/.test(inputString)) {
+      return false;
+    }
+    // Check if the string starts with a number
+    if (/^\d/.test(inputString)) {
+      return false;
+    }
+    // If all conditions are met, return true
+    return true;
+}
+
 function generateUserVerificationToken({email,fullName,_id}) {
     const token = jwt.sign({email,fullName,_id},process.env.USER_VERIFICATION_TOKEN_SECRET,{expiresIn:process.env.USER_VERIFICATION_TOKEN_EXPIRY});
     return token;
@@ -41,6 +58,8 @@ const registerUser = asyncHandler(async(req,res)=>{
     }
     // validate email
     if (!validateEmail(email)) throw new ApiError(400,"Invalid email address");
+    // validate username
+    if (!isValidUsername(username.trim())) throw new ApiError(400,"Invalid username");
     // check if user already exists
     const existeduser = await User.findOne({$or:[{username:username},{email:email}]});
     
@@ -79,16 +98,16 @@ const registerUser = asyncHandler(async(req,res)=>{
 
 const loginUser = asyncHandler(async(req,res)=>{
     // get username or email and password from req.body
-    const {username,email,password} = req.body;
+    const {identifier,password} = req.body;
     // check if username or email and password exists
-    if (!username && !email) {
+    if (!identifier) {
         throw new ApiError(400,"Username or email is required");
     }
     if (!password) {
         throw new ApiError(400,"Password is required");
     }
     // find user by username or email
-    const user = await User.findOne({$or:[{username:username},{email:email}]}).select("-pined"); // find user by username or email
+    const user = await User.findOne({$or:[{username:identifier},{email:identifier}]}).select("-pined"); // find user by username or email
     // check if user exists
     if (!user) {
         throw new ApiError(400,"user dose not exists");
@@ -255,7 +274,7 @@ try {
 
 const requestForgotPasswordEmail = asyncHandler(async(req,res)=>{
     // get email from req.body
-    const {email,verificationURL=""} = req.body;
+    const {email,resetPasswordURL=""} = req.body;
     // check if email exists or not
     if (!email) {
         throw new ApiError(400,"Email is required");
@@ -269,7 +288,7 @@ const requestForgotPasswordEmail = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"User dose not exists");
     }
     // create verification token and send verification email
-    const redirectURL = `${verificationURL}?token=${generateUserVerificationToken(user)}`
+    const redirectURL = `${resetPasswordURL}?token=${generateUserVerificationToken(user)}`
     await sendMail({email:user.email,fullName:user.fullName,mailType:"forgotPassword",url:redirectURL});
     // send response
     return res
@@ -402,7 +421,7 @@ const chengeEmail = asyncHandler(async(req,res)=>{
     // find user by req.user._id
     const user = await User.findById(req.user?._id).select("-__v -pined");
     // get email and password from req.body
-    const {email,password,verificationURL} = req.body;
+    const {email,password,verificationURL=""} = req.body;
     // check if email and password exists
     if (!email || !password) {
         throw new ApiError(400,"All fields are required");
@@ -586,14 +605,14 @@ const getUserProfile = asyncHandler(async(req,res)=>{
     if(currentUser){
         isFollowing = {
             $cond: {
-                if: {$in: [currentUser?._id, "$followers.followedBy"]},
+                if: {$in: [currentUser, "$followers.followedBy"]},
                 then: true,
                 else: false
             }
         };
         isLiked = {
             $cond: {
-                if: {$in: [currentUser?._id, "$likes.likedBy"]},
+                if: {$in: [currentUser, "$likes.likedBy"]},
                 then: true,
                 else: false
             }
@@ -727,11 +746,54 @@ const getPinedItems = asyncHandler(async(req,res)=>{
                         }
                     },
                     {
+                        $lookup:{
+                            from:"likes",
+                            localField:"_id",
+                            foreignField:"web",
+                            as:"likes"
+                        }
+                    },
+                    {
+                        $lookup:{
+                            from:"comments",
+                            localField:"_id",
+                            foreignField:"web",
+                            as:"comments"
+                        }
+                    },
+                    {
                         $addFields:{
-                            owner:{$first:"$owner"}
+                            owner:{$first:"$owner"},
+                            likesCount:{
+                                $size:"$likes"
+                            },
+                            commentsCount:{
+                                $size:"$comments"
+                            },
+                            isLikedByMe:{
+                                $cond: {
+                                    if: {$in: [new mongoose.Types.ObjectId(req.user?._id), "$likes.likedBy"]},
+                                    then: true,
+                                    else: false
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $project:{
+                            likes:0,
+                            comments:0
                         }
                     }
                 ]
+            }
+        },
+        {
+            $unwind:"$pined"
+        },
+        {
+            $replaceRoot:{
+                newRoot:"$pined"
             }
         }
     ],{
