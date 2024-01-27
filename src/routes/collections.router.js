@@ -30,10 +30,10 @@ router.route("/inc-view/:collectionId").patch(updateViewCount);
 router.route("/get/:collectionId").get(getCollectionByCollectionId);
 router.route("/get-webs/:collectionId").get(getCollectionWEbsByCollectionId);
 router.route("/user-collection/:userId").get(getCollectionsByUserId);
+router.route("/my-collections").get(verifyJWT, getCollectionsCreatedByMe);
 router.route("/liked/:userId").get(getLikedCollectionsByUserId);
 router.route("/search").get(searchFromAllCollections);
 router.route("/my-collections/search").get(verifyJWT,searchFromAllCollectionsCreatedByMe);
-router.route("/my-collections").get(verifyJWT, getCollectionsCreatedByMe);
 
 
 

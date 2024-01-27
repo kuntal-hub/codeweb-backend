@@ -374,6 +374,12 @@ function updateShowcase({showcase}) {
 }
 ```
 
+## web routes
+
+### create new web
+
+``
+
 ---
 
 # How to run this project
