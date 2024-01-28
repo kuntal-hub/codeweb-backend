@@ -379,7 +379,7 @@ function updateShowcase({showcase}) {
 ### create new web
 
 ```
-function createWeb({title,description,html,css,js,isPublic,image}) {
+function createWeb({title,description,html="",css="",js="",isPublic,image}) {
     const formData = new FormData();
       formData.append('image', image, 'my-image-name.jpeg');
       formData.append('title', title);
@@ -550,7 +550,95 @@ function showRecomendedPeoplesToFollow ({queryParameters="page=1&limit=8"}) {
 
 ```
 
+### update web 
 
+```
+function updateWeb ({webId,title,description,html,css,js,image}) {
+    const formData = new FormData();
+      formData.append('image', image, 'my-image-name.jpeg');
+      formData.append('title', title);
+      formData.append('description', description);
+        if(html) formData.append('html', html);
+        if(css) formData.append('css', css);
+        if(js) formData.append('js', js);
+    axios.patch(`https://codeweb.onrender.com/api/v1/webs/update/${webId}`,formData,{
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+    })
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### delete web
+
+```
+function deleteWeb ({webId}) {
+    axios.delete(`https://codeweb.onrender.com/api/v1/webs/delete/${webId}`)
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### toggle-publish-status of web
+
+```
+function togglePublishStatus ({webId}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/webs/toggle-publish-status/${webId}`)
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### increase views of web
+
+```
+function increaseViews ({webId}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/webs/inc-view/${webId}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### search from all webs
+
+```
+function searchFromAllWebs ({queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are search, page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/webs/search/all-webs?${queryParameters}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+## collection routes
 
 ---
 
