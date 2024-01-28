@@ -654,6 +654,237 @@ function searchFromAllWebs ({queryParameters="page=1&limit=4"}) {
 
 ## collection routes
 
+### create new collection
+
+```
+function createNewCollection ({name,description,isPublic=true}) {
+    axios.post(`https://codeweb.onrender.com/api/v1/collections/create`,{name,description,isPublic=true})
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### update collection
+
+```
+function updateCollection ({collectionId,name,description}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/collections/update/${collectionId}`,{name,description})
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### delete collection
+
+```
+function deleteCollection ({collectionId}) {
+    axios.delete(`https://codeweb.onrender.com/api/v1/collections/delete/${collectionId}`)
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### add web to collection
+
+```
+function addWebToCollection ({collectionId,webId}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/collections/add-web/${collectionId}/${webId}`)
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### remove web from collection
+
+```
+function removeWebFromCollection ({collectionId,webId}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/collections/remove-web/${collectionId}/${webId}`)
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### toggle publish status of collection
+
+```
+function togglePublishStatusOfCollection ({collectionId}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/collections/toggle-publish-status/${collectionId}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### increase views of collection
+
+```
+function increaseViewsOfCollection ({collectionId}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/collections/inc-view/${collectionId}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### get collection by collection id
+
+```
+function getCollectionByCollectionId ({collectionId}) {
+    axios.get(`https://codeweb.onrender.com/api/v1/collections/get/${collectionId}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### get collection webs by collection id
+
+```
+function getCollectionWebsByCollectionId ({collectionId,queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/collections/get-webs/${collectionId}?${queryParameters}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### get all collections by user id
+
+```
+function getAllCollectionsByUserId ({userId,queryParameters="page=1&limit=4&collectionType=public"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are page, limit , sortBy, sortOrder, collectionType;
+    axios.get(`https://codeweb.onrender.com/api/v1/collections/user-collection/${userId}?${queryParameters}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### get collections created by me
+
+```
+function getCollectionsCreatedByUser ({queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are page, limit , sortBy, sortOrder;
+    axios.get(`https://codeweb.onrender.com/api/v1/collections/my-collections?${queryParameters}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### get liked collections by userId
+
+```
+function getLikedCollectionsByUserId ({userId,queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are page, limit , sortBy, sortOrder;
+    axios.get(`https://codeweb.onrender.com/api/v1/collections/liked/${userId}?${queryParameters}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### search from all collections
+
+```
+function searchFromAllCollections ({queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are search, page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/collections/search/all-collections?${queryParameters}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### search from my collections
+
+```
+function searchFromMyCollections ({queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are search, page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/collections/search/my-collections?${queryParameters}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+
+
 ---
 
 # How to run this project

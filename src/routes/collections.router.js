@@ -27,13 +27,13 @@ router.route("/add-web/:collectionId/:webId").patch(verifyJWT,addWebToCollection
 router.route("/remove-web/:collectionId/:webId").patch(verifyJWT,removeWebFromCollection);
 router.route("/toggle-publish-status/:collectionId").patch(verifyJWT,toggleCollectionPublishStatus);
 router.route("/inc-view/:collectionId").patch(updateViewCount);
-router.route("/get/:collectionId").get(getCollectionByCollectionId);
-router.route("/get-webs/:collectionId").get(getCollectionWEbsByCollectionId);
-router.route("/user-collection/:userId").get(getCollectionsByUserId);
+router.route("/get/:collectionId").get(checkCurrentUser,getCollectionByCollectionId);
+router.route("/get-webs/:collectionId").get(checkCurrentUser,getCollectionWEbsByCollectionId);
+router.route("/user-collection/:userId").get(checkCurrentUser,getCollectionsByUserId);
 router.route("/my-collections").get(verifyJWT, getCollectionsCreatedByMe);
-router.route("/liked/:userId").get(getLikedCollectionsByUserId);
-router.route("/search").get(searchFromAllCollections);
-router.route("/my-collections/search").get(verifyJWT,searchFromAllCollectionsCreatedByMe);
+router.route("/liked/:userId").get(checkCurrentUser,getLikedCollectionsByUserId);
+router.route("/search/all-collections").get(checkCurrentUser,searchFromAllCollections);
+router.route("/search/my-collections").get(verifyJWT,searchFromAllCollectionsCreatedByMe);
 
 
 

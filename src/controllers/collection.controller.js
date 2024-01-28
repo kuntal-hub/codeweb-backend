@@ -208,12 +208,36 @@ const updateViewCount = asyncHandler(async(req,res)=>{
 const getCollectionByCollectionId = asyncHandler(async(req,res)=>{
     // get collectionId from params
     const {collectionId} = req.params;
-    // get userId from query
-    const {userId} = req.query;
     // check if collectionId is present or not
     if (!collectionId) {
         throw new ApiError(400,"collectionId is required");
     }
+    // take isFollowedByMe and isLikedByMe variables
+    let isFollowedByMe,isLikedByMe
+        // if req.user provided then set values of isLikedByMe else set false
+        if (req.user) {
+            isFollowedByMe = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
+                    },
+                    then:true,
+                    else:false
+                }
+            };
+            isLikedByMe = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
+                    },
+                    then:true,
+                    else:false
+                }
+            };
+        } else {
+            isLikedByMe = false;
+            isFollowedByMe = false;
+        }
     // get collection by collectionId 
     const collection = await Collection.aggregate([
         {
@@ -239,15 +263,7 @@ const getCollectionByCollectionId = asyncHandler(async(req,res)=>{
                     {
                         $addFields:{
                             followersCount:{$size:"$followers"},
-                            isFollowedByMe:{
-                                $cond:{
-                                    if:{
-                                        $in:[userId? new mongoose.Types.ObjectId(userId) : " ","$followers.followedBy"]
-                                    },
-                                    then:true,
-                                    else:false
-                                }
-                            }
+                            isFollowedByMe:isFollowedByMe
                         }
                     },
                     {
@@ -275,15 +291,7 @@ const getCollectionByCollectionId = asyncHandler(async(req,res)=>{
                 websCount:{$size:"$webs"},
                 likesCount:{$size:"$likes"},
                 owner:{$first:"$owner"},
-                isLikedByMe:{
-                    $cond:{
-                        if:{
-                            $in:[userId? new mongoose.Types.ObjectId(userId) : " ","$likes.likedBy"]
-                        },
-                        then:true,
-                        else:false
-                    }
-                }
+                isLikedByMe:isLikedByMe
             }
         },
         {
@@ -306,8 +314,8 @@ const getCollectionByCollectionId = asyncHandler(async(req,res)=>{
 const getCollectionWEbsByCollectionId = asyncHandler(async(req,res)=>{
     // get collectionId from params
     const {collectionId} = req.params;
-    // get userId from query
-    const {userId,page=1,limit=4} = req.query;
+    // get page and limit from query
+    const {page=1,limit=4} = req.query;
     if (!collectionId) {
         throw new ApiError(400,"collectionId is required");
     }
@@ -316,6 +324,22 @@ const getCollectionWEbsByCollectionId = asyncHandler(async(req,res)=>{
     // check if collection is found or not
     if (!collection) {
         throw new ApiError(404,"Collection not found");
+    }
+    // take isLikedByMe variable
+    let isLikedByMe;
+    // if req.user provided then set values of isLikedByMe else set false
+    if (req.user) {
+        isLikedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
+    } else {
+        isLikedByMe = false;
     }
     // get webs from collection
     const webs = await Web.aggregatePaginate([
@@ -362,15 +386,7 @@ const getCollectionWEbsByCollectionId = asyncHandler(async(req,res)=>{
                 likesCount:{$size:"$likes"},
                 commentsCount:{$size:"$comments"},
                 owner:{$first:"$owner"},
-                isLikedByMe:{
-                    $cond:{
-                        if:{
-                            $in:[userId? new mongoose.Types.ObjectId(userId) : " ","$likes.likedBy"]
-                        },
-                        then:true,
-                        else:false
-                    }
-                }
+                isLikedByMe:isLikedByMe
             }
         },
         {
@@ -399,11 +415,27 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
     // get userId from params
     const {userId} = req.params;
     // get user_id collectionType,sortBy,sortOrder,page,limit from query
-    const {user_id,collectionType="public",sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
+    const {collectionType="public",sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
     // sortBy = views,likesCount,websCount,createdAt
     // check if userId is present or not
     if (!userId) {
         throw new ApiError(400,"userId is required");
+    }
+    // take isLikedByMe variable
+    let isLikedByMe;
+    // if req.user provided then set values of isLikedByMe else set false
+    if (req.user) {
+        isLikedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
+    } else {
+        isLikedByMe = false;
     }
     // get collections
     const collections =  await Collection.aggregatePaginate([
@@ -448,15 +480,7 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
                 websCount:{$size:"$webs"},
                 webs:{$slice:["$webs",0,4]},
                 likesCount:{$size:"$likes"},
-                isLikedByMe:{
-                    $cond:{
-                        if:{
-                            $in:[user_id? new mongoose.Types.ObjectId(user_id) : "","$likes.likedBy"]
-                        },
-                        then:true,
-                        else:false
-                    }
-                }
+                isLikedByMe:isLikedByMe
             }
         },
         {
@@ -566,12 +590,28 @@ const getCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
 const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
     // get all collections liked by user
     const {userId} = req.params;
-    const {user_id,sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
+    const {sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
     // sortBy = views,likesCount,websCount,createdAt
     if (!userId) {
         throw new ApiError(400,"userId is required");
     }
-
+    // take isLikedByMe variable
+    let isLikedByMe;
+    // if req.user provided then set values of isLikedByMe else set false
+    if (req.user) {
+        isLikedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
+    } else {
+        isLikedByMe = false;
+    }
+    // get liked collections
     const likedCollections = await Like.aggregatePaginate([
         {
             $match:{
@@ -626,15 +666,7 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
                             websCount:{$size:"$webs"},
                             webs:{$slice:["$webs",0,4]},
                             likesCount:{$size:"$likes"},
-                            isLikedByMe:{
-                                $cond:{
-                                    if:{
-                                        $in:[user_id? new mongoose.Types.ObjectId(user_id) : "","$likes.likedBy"]
-                                    },
-                                    then:true,
-                                    else:false
-                                }
-                            }
+                            isLikedByMe:isLikedByMe
                         }
                     },
                     {
@@ -675,12 +707,29 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
 })
 
 const searchFromAllCollections = asyncHandler(async(req,res)=>{
-    const {search,page=1,limit=4,userId} = req.query;
-
+    // get search,page,limit from query
+    const {search,page=1,limit=4} = req.query;
+    // check if search is present or not
     if (!search) {
         throw new ApiError(400,"search query is required for searchin collections");
     }
-
+    // take isLikedByMe variable
+    let isLikedByMe;
+    // if req.user provided then set values of isLikedByMe else set false
+    if (req.user) {
+        isLikedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
+    } else {
+        isLikedByMe = false;
+    }
+    // get collections
     const collections = await Collection.aggregatePaginate([
         {
             $match:{
@@ -743,15 +792,7 @@ const searchFromAllCollections = asyncHandler(async(req,res)=>{
                 likesCount:{$size:"$likes"},
                 webs:{$slice:["$webs",0,4]},
                 owner:{$first:"$owner"},
-                isLikedByMe:{
-                    $cond:{
-                        if:{
-                            $in:[userId? new mongoose.Types.ObjectId(userId) : " ","$likes.likedBy"]
-                        },
-                        then:true,
-                        else:false
-                    }
-                },
+                isLikedByMe:isLikedByMe,
                 "score": { "$meta": "textScore" }
             }
         },
