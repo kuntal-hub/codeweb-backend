@@ -302,9 +302,9 @@ function updateCoverImage({image,public_id}) {
 ### get user profile
 
 ```
-function getUserProfile({username,currentUser}) {
+function getUserProfile({username}) {
     // if user not loged in then currentUser is optional currentUser = _id of loged in user
-    axios.get(`https://codeweb.onrender.com/api/v1/users/profile/${username}?currentUser=${currentUser}`)
+    axios.get(`https://codeweb.onrender.com/api/v1/users/profile/${username}`)
         .then(res => {
             console.log(res.data)
         })
@@ -378,7 +378,179 @@ function updateShowcase({showcase}) {
 
 ### create new web
 
-``
+```
+function createWeb({title,description,html,css,js,isPublic,image}) {
+    const formData = new FormData();
+      formData.append('image', image, 'my-image-name.jpeg');
+      formData.append('title', title);
+      formData.append('description', description);
+        formData.append('html', html);
+        formData.append('css', css);
+        formData.append('js', js);
+        formData.append('isPublic', isPublic);
+    axios.post("https://codeweb.onrender.com/api/v1/webs/create",formData,{
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+    })
+        .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### fork someone's web
+
+```
+function forkWeb({webId}) {
+    axios.post(`https://codeweb.onrender.com/api/v1/webs/create-forked/${webId}`)
+        .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+
+```
+
+### get web by web id
+
+```
+function getWebById({webId}) {
+    axios.get(`https://codeweb.onrender.com/api/v1/webs/${webId}`)
+        .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### get all webs by user id (created by user)
+
+```
+function getAllWebByUserId ({userId,queryParameters="page=1&limit=4&webType=public"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are  webType , sortBy, sortOrder, page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/webs/user/${userId}?${queryParameters}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### get all webs by user id (liked by user)
+
+```
+function getAllWebByUserId ({userId,queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are sortBy, sortOrder, page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/webs/liked/${userId}?${queryParameters}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### get my following users webs
+
+```
+function getMyFollowingUsersWebs ({queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are sortBy, sortOrder, page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/webs/following?${queryParameters}`)
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### get trending webs
+
+```
+function getTrendingWebs ({queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/webs/trending?${queryParameters}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### get your Work webs
+
+```
+function getYourWorkWebs ({queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are sortBy, sortOrder, page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/webs/your-work?${queryParameters}`)
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### search from my webs
+
+```
+function searchFromMyWebs ({queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are search, page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/webs/search/my-webs?${queryParameters}`)
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### show recomended peoples to follow
+
+```
+function showRecomendedPeoplesToFollow ({queryParameters="page=1&limit=8"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/webs/recomended-people?${queryParameters}`)
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+
+```
+
+
 
 ---
 

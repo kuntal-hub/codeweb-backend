@@ -37,5 +37,33 @@ const verifyJWT = asyncHandler(async(req,res,next)=>{
     }
 })
 
+const checkCurrentUser = asyncHandler(async(req,res,next)=>{
+    try {
+        // get token from header or cookie
+        const token=req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ","")
+        // check if token exists
+        if (!token) {
+            next();
+        }
+        // verify token
+        const decodedToken = jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
+        // check if token is valid
+        if (!decodedToken) next();
+        // find user
+        const user = await User.findOne({$and:[{_id:new mongoose.Types.ObjectId(decodedToken?._id)},{refreshToken:{$exists:true}}]})
+        .select("-password -refreshToken -pined");
+        // check if user exists
+        if (!user) {
+            next()
+        }
+        // set user to req.user
+        req.user = user;
+        next();
 
-export {verifyJWT}
+    } catch (error) {
+        next();
+    }
+})
+
+
+export {verifyJWT , checkCurrentUser}

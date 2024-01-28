@@ -94,7 +94,32 @@ const getWebByWebId = asyncHandler(async (req, res) => {
     // get webId from req.params
     const { webId } = req.params;
     // get userId from req.query
-    const {userId} = req.query;
+    const userId = req.user ? req.user._id : null;
+    // check userId is provided or not
+    let isFollowedByMe,isLikedByMe;
+    // if userId provided then set values of isLikedByMe and isFollowedByMe else set false
+    if (userId) {
+        isFollowedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(userId),"$followers.followedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
+        isLikedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(userId),"$likes.likedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
+    } else {
+        isFollowedByMe = isLikedByMe = false;
+    }
     // check webId is provided or not
     if (!webId) {
         throw new ApiError(400,"webId is required");
@@ -126,15 +151,7 @@ const getWebByWebId = asyncHandler(async (req, res) => {
                             followersCount:{
                                 $size:"$followers"
                             },
-                            isFollowedByMe:{
-                                $cond:{
-                                    if:{
-                                        $in:[userId? new mongoose.Types.ObjectId(userId) : "","$followers.followedBy"]
-                                    },
-                                    then:true,
-                                    else:false
-                                }
-                            }
+                            isFollowedByMe:isFollowedByMe
                         }
                     },
                     {
@@ -171,15 +188,7 @@ const getWebByWebId = asyncHandler(async (req, res) => {
                     $size:"$likes"
                 },
                 commentsCount:{$size:"$comments"},
-                isLikedByMe:{
-                    $cond:{
-                        if:{
-                            $in:[userId? new mongoose.Types.ObjectId(userId) : "","$likes.likedBy"]
-                        },
-                        then:true,
-                        else:false
-                    }
-                },
+                isLikedByMe:isLikedByMe,
                 owner:{$first:"$owner"}
             }
         },
@@ -203,7 +212,7 @@ const getWebByWebId = asyncHandler(async (req, res) => {
 
 const getAllWebsByUserId = asyncHandler(async (req, res) => {
     // get user_id, webType, sortBy, sortOrder, page, limit from req.query
-    const { user_id, webType = "public", sortBy="views", sortOrder="desc", page=1, limit=4 } = req.query;
+    const { webType = "public", sortBy="views", sortOrder="desc", page=1, limit=4 } = req.query;
     // get userId from req.params
     const { userId } = req.params;
     // sortBy = views, createdAt, likesCount, commentsCount
@@ -216,7 +225,7 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
         throw new ApiError(400,"userId is required");
     }
     // check webType is valid or not
-    let match;
+    let match,isLikedByMe;
     // if webType is private then select only private webs
     if (webType === "private") {
         match = {
@@ -244,6 +253,20 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
         // if webType is invalid then throw error
     }else{
         throw new ApiError(400,"invalid webType");
+    }
+    // if req.user provided then set values of isLikedByMe and isFollowedByMe else set false
+    if (req.user) {
+        isLikedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user?._id),"$likes.likedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
+    } else {
+        isLikedByMe = false;
     }
     // get webs
     const webs = await Web.aggregatePaginate([
@@ -290,15 +313,7 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
                 $size:"$comments"
             },
             owner:{$first:"$owner"},
-            isLikedByMe:{
-                $cond:{
-                    if:{
-                        $in:[user_id? new mongoose.Types.ObjectId(user_id) : "","$likes.likedBy"]
-                    },
-                    then:true,
-                    else:false
-                }
-            }
+            isLikedByMe:isLikedByMe
         }
     },
     {
@@ -332,10 +347,27 @@ const getLikedWebs = asyncHandler(async (req, res) => {
     // get userId from req.params
     const {userId} = req.params;
     // get user_id, sortBy, sortOrder, page, limit from req.query
-    const {user_id,sortBy="createdAt",sortOrder="desc", page=1, limit=4 } = req.query;
+    const {sortBy="createdAt",sortOrder="desc", page=1, limit=4 } = req.query;
     // sortBy = views, createdAt, likesCount, commentsCount
+    // check userId is provided or not
     if (!userId) {
         throw new ApiError(400,"userId is required");
+    }
+    // take a variable isLikedByMe
+    let isLikedByMe;
+    // if req.user provided then set values of isLikedByMe and isFollowedByMe else set false
+    if (req.user) {
+        isLikedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user?._id),"$likes.likedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
+    } else {
+        isLikedByMe = false;
     }
     // get liked webs
     const likedWebs = await Like.aggregatePaginate([
@@ -399,15 +431,7 @@ const getLikedWebs = asyncHandler(async (req, res) => {
                                 $size:"$comments"
                             },
                             owner:{$first:"$owner"},
-                            isLikedByMe:{
-                                $cond:{
-                                    if:{
-                                        $in:[user_id? new mongoose.Types.ObjectId(user_id) : "","$likes.likedBy"]
-                                    },
-                                    then:true,
-                                    else:false
-                                }
-                            }
+                            isLikedByMe:isLikedByMe
                         }
                     },
                     {
@@ -573,8 +597,24 @@ const getFollowingWebs = asyncHandler(async (req, res) => {
 })
 
 const getTrendingWebs = asyncHandler(async (req, res) => {
-    const { page=1, limit=4 } = req.query;
     // return array of webs first sort by impressions(views+likes+comments) then by date
+    const { page=1, limit=4 } = req.query;
+    // take a variable isLikedByMe
+    let isLikedByMe;
+    // if req.user provided then set values of isLikedByMe and isFollowedByMe else set false
+    if (req.user) {
+        isLikedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user?._id),"$likes.likedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
+    } else {
+        isLikedByMe = false;
+    }
 
     const webs = await Web.aggregatePaginate([
         {
@@ -623,7 +663,8 @@ const getTrendingWebs = asyncHandler(async (req, res) => {
                 commentsCount:{
                     $size:"$comments"
                 },
-                owner:{$first:"$owner"}
+                owner:{$first:"$owner"},
+                isLikedByMe:isLikedByMe
             }
         },
         {
@@ -815,9 +856,9 @@ const RecomendedpeopleToFollow = asyncHandler(async (req, res) => {
     // return array of users who are not followed by user but have created public webs
     const { page=1, limit=8 } = req.query;
     // get all following ids
-    const following = await Follower.find({followedBy:req.user?._id}).select("profile");
+    const following = await Follower.find({followedBy:new mongoose.Types.ObjectId(req.user?._id)}).select("profile");
     // get all following ids
-    const followingIds = following.map(f => f.profile);
+    const followingIds = following.map(f => new mongoose.Types.ObjectId(f.profile));
     // get all users who are not followed by user but have created public webs
     const users = await User.aggregatePaginate([
         {
@@ -1058,12 +1099,29 @@ const updateWebViewCount = asyncHandler(async (req,res)=>{
 })
 
 const searchFromAllWebs = asyncHandler(async (req, res) => {
-    const { page=1, limit=4 , search, userId} = req.query;
-
+    // get page, limit, search from req.query
+    const { page=1, limit=4 , search } = req.query;
+    // check search is provided or not
     if (!search) {
         throw new ApiError(400,"search query is required for searching webs");
     }
-
+    // take a variable isLikedByMe
+    let isLikedByMe;
+    // if req.user provided then set values of isLikedByMe and isFollowedByMe else set false
+    if (req.user) {
+        isLikedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user?._id),"$likes.likedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
+    } else {
+        isLikedByMe = false;
+    }
+    // get webs
     const webs = await Web.aggregatePaginate([
         {
             $match:{
@@ -1113,15 +1171,7 @@ const searchFromAllWebs = asyncHandler(async (req, res) => {
                     $size:"$comments"
                 },
                 owner:{$first:"$owner"},
-                isLikedByMe:{
-                    $cond:{
-                        if:{
-                            $in:[userId? new mongoose.Types.ObjectId(userId):"","$likes.likedBy"]
-                        },
-                        then:true,
-                        else:false
-                    }
-                },
+                isLikedByMe:isLikedByMe,
                 "score": { "$meta": "textScore" }
             }
         },
@@ -1140,6 +1190,14 @@ const searchFromAllWebs = asyncHandler(async (req, res) => {
         page:parseInt(page),
         limit:parseInt(limit)
     })
+    // check webs are found or not
+    if (!webs) {
+        throw new ApiError(500,"something went wrong while fetching webs");
+    }
+    // send responce
+    return res
+    .status(200)
+    .json(new ApiResponce(200,webs,"webs found successfully"));
 })
 
 export{

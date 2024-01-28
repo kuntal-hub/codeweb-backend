@@ -593,8 +593,8 @@ const updateCoverImage = asyncHandler(async(req,res)=>{
 const getUserProfile = asyncHandler(async(req,res)=>{
     // get username from req.params
     const {username} = req.params;
-    // get currentUser from req.query
-    const {currentUser} = req.query;
+    // get currentUser from req.user
+    const currentUser = req.user ? new mongoose.Types.ObjectId(req.user._id) : null;
     // check if username exists or not
     if (!username) {
         throw new ApiError(400,"username is required");
