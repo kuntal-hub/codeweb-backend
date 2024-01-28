@@ -11,7 +11,7 @@ const router = Router();
 router.use(verifyJWT);
 
 router.route("/create").post(createReplay);
-router.route("/update").patch(updateReplay);
+router.route("/update/:replayId").patch(updateReplay);
 router.route("/delete/:replayId").delete(deleteReplay);
 
 export default router;

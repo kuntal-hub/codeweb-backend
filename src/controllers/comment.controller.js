@@ -32,7 +32,8 @@ const createComment = asyncHandler(async (req, res) => {
 
 const updateComment = asyncHandler(async (req, res) => {
     // get text and commentId from body
-    const {text,commentId} = req.body;
+    const {text} = req.body;
+    const {commentId} = req.params;
     // check if text and commentId both are present or not
     if (!commentId) {
         throw new ApiError(400, 'Comment id is required');
@@ -88,7 +89,8 @@ const deleteComment = asyncHandler(async (req, res) => {
 
 const getAllWebComments = asyncHandler(async (req, res) => {
     // get webId from query
-    const {webId,page=1,limit=20} = req.query;
+    const {page=1,limit=20} = req.query;
+    const {webId} = req.params;
     // check if webId is present or not
     if (!webId || !mongoose.isValidObjectId(webId)) {
         throw new ApiError(400, 'Web id is required');

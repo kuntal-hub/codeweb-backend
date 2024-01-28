@@ -29,8 +29,10 @@ const createReplay = asyncHandler(async (req, res) => {
 
 
 const updateReplay = asyncHandler(async (req, res) => {
-    // get text and replayId from body
-    const {text,replayId} = req.body;
+    // get text from body
+    const {text} = req.body;
+    // get replayId from params
+    const {replayId} = req.params;
     // check if text and replayId both are present or not
     if (!replayId || !text) {
         throw new ApiError(400, 'Replay id and text both are required');

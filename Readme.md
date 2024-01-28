@@ -1024,7 +1024,137 @@ function getAssetsLikedByMe ({queryParameters="page=1&limit=4"}) {
 
 ## comment routes
 
+### create new comment
 
+```
+function createNewComment ({web,text}) { // web = web id 
+    axios.post(`https://codeweb.onrender.com/api/v1/comments/create`,{web,text})
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### update comment
+
+```
+function updateComment ({commentId,text}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/comments/update/${commentId}`,{text})
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### delete comment
+
+```
+function deleteComment ({commentId}) {
+    axios.delete(`https://codeweb.onrender.com/api/v1/comments/delete/${commentId}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### get all comments by web id
+
+```
+function getAllCommentsByWebId ({webId,queryParameters="page=1&limit=20"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/comments/get-comments/${webId}?${queryParameters}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### get comment by comment id
+
+```
+function getCommentByCommentId ({commentId}) {
+    axios.get(`https://codeweb.onrender.com/api/v1/comments/get/${commentId}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+## reply routes
+
+### create new reply
+
+```
+function createNewReply ({commentId,text}) { 
+    axios.post(`https://codeweb.onrender.com/api/v1/replays/create`,{commentId,text}) // in my next project i will use replyTo
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### update reply
+
+```
+function updateReply ({replayId,text}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/replays/update/${replayId}`,{text})
+    // it is my mistake i use replay instead of reply but i can't change it now because it will break my project
+    // it is recommended to use reply instead of replay in frontend
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### delete reply
+
+```
+function deleteReply ({replayId}) {
+    axios.delete(`https://codeweb.onrender.com/api/v1/replays/delete/${replayId}`)
+    // it is my mistake i use replay instead of reply but i can't change it now because it will break my project
+    // it is recommended to use reply instead of replay in frontend
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+## likes routes
+
+### like web
+
+```
 
 
 ---
