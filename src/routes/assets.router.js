@@ -18,12 +18,12 @@ router.use(verifyJWT); // Apply verifyJWT middleware to all routes in this file
 
 router.route("/create").post(createAsset);
 router.route("/my-assets").get(getAllAssetsCreatedByUser);
-router.route("/assets").get(getAllPublicAssets);
-router.route("/assets/search").get(searchFromPublicAssets);
-router.route("/asset/:assetId").get(getAssetById);
+router.route("/get").get(getAllPublicAssets);
+router.route("/search/all-assets").get(searchFromPublicAssets);
+router.route("/get/:assetId").get(getAssetById);
 router.route("/delete/:assetId").delete(deleteAssetById);
 router.route("/update/:assetId").put(updateAssetById);
-router.route("/liked-assets").get(getLikedAssets);
+router.route("/liked").get(getLikedAssets);
 
 
 export default router;

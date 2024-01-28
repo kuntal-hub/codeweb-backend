@@ -883,6 +883,148 @@ function searchFromMyCollections ({queryParameters="page=1&limit=4"}) {
 }
 ```
 
+## asset routes
+
+### create new asset
+
+```
+function createNewAsset ({title,assetType,assetURL,assetPublicId,isPublic=true}) {
+    axios.post(`https://codeweb.onrender.com/api/v1/assets/create`,{title,assetType,assetURL,assetPublicId,isPublic})
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+
+```
+
+### get all assets created by me
+
+```
+function getAllAssetsCreatedByMe ({queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are page, limit , assetType;
+    axios.get(`https://codeweb.onrender.com/api/v1/assets/my-assets?${queryParameters}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### get all public assets
+
+```
+function getAllPublicAssets ({queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are page, limit , assetType;
+    axios.get(`https://codeweb.onrender.com/api/v1/assets/get?${queryParameters}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### search from all assets
+
+```
+function searchFromAllAssets ({queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are search, page, limit, assetType;
+    axios.get(`https://codeweb.onrender.com/api/v1/assets/search/all-assets?${queryParameters}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### get asset by asset id
+
+```
+function getAssetByAssetId ({assetId}) {
+    axios.get(`https://codeweb.onrender.com/api/v1/assets/get/${assetId}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### delete asset
+
+```
+function deleteAsset ({assetId}) {
+    axios.delete(`https://codeweb.onrender.com/api/v1/assets/delete/${assetId}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### update asset
+
+```
+function updateAsset ({assetId,title,isPublic=true}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/assets/update/${assetId}`,{title,isPublic})
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### get assets liked by me
+
+```
+function getAssetsLikedByMe ({queryParameters="page=1&limit=4"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are page, limit , assetType;
+    axios.get(`https://codeweb.onrender.com/api/v1/assets/liked?${queryParameters}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+## comment routes
+
+
 
 
 ---

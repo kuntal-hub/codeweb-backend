@@ -148,7 +148,11 @@ const getAllPublicAssets = asyncHandler(async(req,res)=>{
 
 const searchFromPublicAssets = asyncHandler(async(req,res)=>{
     // get page and limit and search query from query
-    const {page=1,limit=20,assetType="image",search=""} = req.query;
+    const {page=1,limit=20,assetType="image",search} = req.query;
+    // check if search query is present or not
+    if (!search) {
+        throw new ApiError(400,"Please provide search query");
+    }
     // get all public assets which matches the search query
     const assets = Asset.aggregatePaginate([
         {
