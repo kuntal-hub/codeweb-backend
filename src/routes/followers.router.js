@@ -11,8 +11,8 @@ const router = Router();
 router.use(verifyJWT);
 
 router.route("/toggle/:profileId").post(toggleFollow);
-router.route("/followers/:profileId").get(getFollowers);
-router.route("/followings/:profileId").get(getFollowings);
+router.route("/get-followers/:profileId").get(getFollowers);
+router.route("/get-followings/:profileId").get(getFollowings);
 
 
 export default router;

@@ -67,7 +67,7 @@ in this documentation I use axios to make http request to the backend server. so
 
 ### create new user
 
-```
+```js
 function createNewUser({username,email,password,fullName,verificationURL=""}) {
     const data = {
         username,
@@ -88,7 +88,7 @@ function createNewUser({username,email,password,fullName,verificationURL=""}) {
 
 ### login
 
-```
+```js
 function login({identifier,password}) {
     const data = {
         identifier, // username or email
@@ -106,7 +106,7 @@ function login({identifier,password}) {
 
 ### logout
 
-```
+```js
 function logout() {
     axios.post("https://codeweb.onrender.com/api/v1/users/logout?fromAllDevices=true")
     // fromAllDevices=true means logout from all devices if you want to logout from current device then remove this query parameter
@@ -122,7 +122,7 @@ function logout() {
 
 ### refresh access token
 
-```
+```js
 function refreshAccessToken() {
     axios.post("https://codeweb.onrender.com/api/v1/users/refresh-token")
         .then(res => {
@@ -136,7 +136,7 @@ function refreshAccessToken() {
 
 ### get current logedin user
 
-```
+```js
 function getCurrentUser() {
     axios.get("https://codeweb.onrender.com/api/v1/users/me")
         .then(res => {
@@ -151,7 +151,7 @@ function getCurrentUser() {
 
 ### request verify email
 
-```
+```js
 function requestVerifyEmail({verificationURL=""}) {
     axios.post("https://codeweb.onrender.com/api/v1/users/request-verify-email",{verificationURL})
         .then(res => {
@@ -166,7 +166,7 @@ function requestVerifyEmail({verificationURL=""}) {
 
 ### verify email
 
-```
+```js
 function verifyEmail({token}) {
     axios.post("https://codeweb.onrender.com/api/v1/users/verify-email",{token})
         .then(res => {
@@ -180,7 +180,7 @@ function verifyEmail({token}) {
 
 ### request forgot password email
 
-```
+```js
 function sendForgotPasswordEmail({email,resetPasswordURL=""}) {
     axios.post("https://codeweb.onrender.com/api/v1/users/request-forgot-password-email",{email,resetPasswordURL})
         .then(res => {
@@ -194,7 +194,7 @@ function sendForgotPasswordEmail({email,resetPasswordURL=""}) {
 
 ### reset password
 
-```
+```js
 function resetPassword({token,newPassword}) {
     axios.post("https://codeweb.onrender.com/api/v1/users/reset-password",{token,newPassword})
         .then(res => {
@@ -208,7 +208,7 @@ function resetPassword({token,newPassword}) {
 
 ### update user info
 
-```
+```js
 function updateUserInfo(data) {
     // data = {fullName,bio,link1,link2,link3}
     axios.patch("https://codeweb.onrender.com/api/v1/users/update",{...data})
@@ -224,7 +224,7 @@ function updateUserInfo(data) {
 
 ### change password
 
-```
+```js
 function changePassword({oldPassword,newPassword}) {
     axios.post("https://codeweb.onrender.com/api/v1/users/change-password",{oldPassword,newPassword})
         .then(res => {
@@ -239,7 +239,7 @@ function changePassword({oldPassword,newPassword}) {
 
 ### change email
 
-```
+```js
 function changeEmail({email,password,verificationURL}) {
     axios.post("https://codeweb.onrender.com/api/v1/users/change-email",{email,password,verificationURL})
         .then(res => {
@@ -254,7 +254,7 @@ function changeEmail({email,password,verificationURL}) {
 
 ### delete user
 
-```
+```js
 function deleteUser({password}) {
     axios.delete("https://codeweb.onrender.com/api/v1/users/delete",{password})
         .then(res => {
@@ -269,7 +269,7 @@ function deleteUser({password}) {
 
 ### update avatar
 
-```
+```js
 function updateAvatar({image,public_id}) {
     // avatar = avatar url
     axios.patch("https://codeweb.onrender.com/api/v1/users/update-avatar",{image,public_id})
@@ -285,7 +285,7 @@ function updateAvatar({image,public_id}) {
 
 ### update cover image
 
-```
+```js
 function updateCoverImage({image,public_id}) {
     // coverImage = cover image url
     axios.patch("https://codeweb.onrender.com/api/v1/users/update-cover-image",{image,public_id})
@@ -301,7 +301,7 @@ function updateCoverImage({image,public_id}) {
 
 ### get user profile
 
-```
+```js
 function getUserProfile({username}) {
     // if user not loged in then currentUser is optional currentUser = _id of loged in user
     axios.get(`https://codeweb.onrender.com/api/v1/users/profile/${username}`)
@@ -316,7 +316,7 @@ function getUserProfile({username}) {
 
 ### get pined items
 
-```
+```js
 function getPinedItems({page,limit}) {
     axios.get(`https://codeweb.onrender.com/api/v1/users/pined?page=${page}&limit=${limit}`)
         .then(res => {
@@ -331,7 +331,7 @@ function getPinedItems({page,limit}) {
 
 ### add to pined items
 
-```
+```js
 function addToPinedItems({webId}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/users/add-to-pined/${webId}`)
         .then(res => {
@@ -346,7 +346,7 @@ function addToPinedItems({webId}) {
 
 ### remove from pined items
 
-```
+```js
 function removeFromPinedItems({webId}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/users/remove-pined/${webId}`)
         .then(res => {
@@ -361,7 +361,7 @@ function removeFromPinedItems({webId}) {
 
 ### update showcase
 
-```
+```js
 function updateShowcase({showcase}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/users/update-showcase`,{showcase})
         .then(res => {
@@ -376,7 +376,7 @@ function updateShowcase({showcase}) {
 
 ### check-username-availability
 
-```
+```js
 function checkUsernameAvailability({username}) {
     axios.get(`https://codeweb.onrender.com/api/v1/users/check-username-availability/${username}`)
         .then(res => {
@@ -392,7 +392,7 @@ function checkUsernameAvailability({username}) {
 
 ### create new web
 
-```
+```js
 function createWeb({title,description,html="",css="",js="",isPublic,image}) {
     const formData = new FormData();
       formData.append('image', image, 'my-image-name.jpeg');
@@ -419,7 +419,7 @@ function createWeb({title,description,html="",css="",js="",isPublic,image}) {
 
 ### fork someone's web
 
-```
+```js
 function forkWeb({webId}) {
     axios.post(`https://codeweb.onrender.com/api/v1/webs/create-forked/${webId}`)
         .then(res => {
@@ -435,7 +435,7 @@ function forkWeb({webId}) {
 
 ### get web by web id
 
-```
+```js
 function getWebById({webId}) {
     axios.get(`https://codeweb.onrender.com/api/v1/webs/${webId}`)
         .then(res => {
@@ -449,7 +449,7 @@ function getWebById({webId}) {
 
 ### get all webs by user id (created by user)
 
-```
+```js
 function getAllWebByUserId ({userId,queryParameters="page=1&limit=4&webType=public"}) {
     // queryParameters = string contains all querys of url
     // valid querys are  webType , sortBy, sortOrder, page, limit;
@@ -465,7 +465,7 @@ function getAllWebByUserId ({userId,queryParameters="page=1&limit=4&webType=publ
 
 ### get all webs by user id (liked by user)
 
-```
+```js
 function getAllWebByUserId ({userId,queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are sortBy, sortOrder, page, limit;
@@ -481,7 +481,7 @@ function getAllWebByUserId ({userId,queryParameters="page=1&limit=4"}) {
 
 ### get my following users webs
 
-```
+```js
 function getMyFollowingUsersWebs ({queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are sortBy, sortOrder, page, limit;
@@ -498,7 +498,7 @@ function getMyFollowingUsersWebs ({queryParameters="page=1&limit=4"}) {
 
 ### get trending webs
 
-```
+```js
 function getTrendingWebs ({queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit;
@@ -514,7 +514,7 @@ function getTrendingWebs ({queryParameters="page=1&limit=4"}) {
 
 ### get your Work webs
 
-```
+```js
 function getYourWorkWebs ({queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are sortBy, sortOrder, page, limit;
@@ -531,7 +531,7 @@ function getYourWorkWebs ({queryParameters="page=1&limit=4"}) {
 
 ### search from my webs
 
-```
+```js
 function searchFromMyWebs ({queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are search, page, limit;
@@ -548,7 +548,7 @@ function searchFromMyWebs ({queryParameters="page=1&limit=4"}) {
 
 ### show recomended peoples to follow
 
-```
+```js
 function showRecomendedPeoplesToFollow ({queryParameters="page=1&limit=8"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit;
@@ -566,7 +566,7 @@ function showRecomendedPeoplesToFollow ({queryParameters="page=1&limit=8"}) {
 
 ### update web 
 
-```
+```js
 function updateWeb ({webId,title,description,html,css,js,image}) {
     const formData = new FormData();
       formData.append('image', image, 'my-image-name.jpeg');
@@ -593,7 +593,7 @@ function updateWeb ({webId,title,description,html,css,js,image}) {
 
 ### delete web
 
-```
+```js
 function deleteWeb ({webId}) {
     axios.delete(`https://codeweb.onrender.com/api/v1/webs/delete/${webId}`)
             .then(res => {
@@ -609,7 +609,7 @@ function deleteWeb ({webId}) {
 
 ### toggle-publish-status of web
 
-```
+```js
 function togglePublishStatus ({webId}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/webs/toggle-publish-status/${webId}`)
             .then(res => {
@@ -624,7 +624,7 @@ function togglePublishStatus ({webId}) {
 
 ### increase views of web
 
-```
+```js
 function increaseViews ({webId}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/webs/inc-view/${webId}`)
             .then(res => {
@@ -638,7 +638,7 @@ function increaseViews ({webId}) {
 
 ### search from all webs
 
-```
+```js
 function searchFromAllWebs ({queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are search, page, limit;
@@ -656,7 +656,7 @@ function searchFromAllWebs ({queryParameters="page=1&limit=4"}) {
 
 ### create new collection
 
-```
+```js
 function createNewCollection ({name,description,isPublic=true}) {
     axios.post(`https://codeweb.onrender.com/api/v1/collections/create`,{name,description,isPublic=true})
             .then(res => {
@@ -672,7 +672,7 @@ function createNewCollection ({name,description,isPublic=true}) {
 
 ### update collection
 
-```
+```js
 function updateCollection ({collectionId,name,description}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/collections/update/${collectionId}`,{name,description})
             .then(res => {
@@ -688,7 +688,7 @@ function updateCollection ({collectionId,name,description}) {
 
 ### delete collection
 
-```
+```js
 function deleteCollection ({collectionId}) {
     axios.delete(`https://codeweb.onrender.com/api/v1/collections/delete/${collectionId}`)
             .then(res => {
@@ -704,7 +704,7 @@ function deleteCollection ({collectionId}) {
 
 ### add web to collection
 
-```
+```js
 function addWebToCollection ({collectionId,webId}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/collections/add-web/${collectionId}/${webId}`)
             .then(res => {
@@ -720,7 +720,7 @@ function addWebToCollection ({collectionId,webId}) {
 
 ### remove web from collection
 
-```
+```js
 function removeWebFromCollection ({collectionId,webId}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/collections/remove-web/${collectionId}/${webId}`)
             .then(res => {
@@ -736,7 +736,7 @@ function removeWebFromCollection ({collectionId,webId}) {
 
 ### toggle publish status of collection
 
-```
+```js
 function togglePublishStatusOfCollection ({collectionId}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/collections/toggle-publish-status/${collectionId}`)
             .then(res => {
@@ -751,7 +751,7 @@ function togglePublishStatusOfCollection ({collectionId}) {
 
 ### increase views of collection
 
-```
+```js
 function increaseViewsOfCollection ({collectionId}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/collections/inc-view/${collectionId}`)
             .then(res => {
@@ -766,7 +766,7 @@ function increaseViewsOfCollection ({collectionId}) {
 
 ### get collection by collection id
 
-```
+```js
 function getCollectionByCollectionId ({collectionId}) {
     axios.get(`https://codeweb.onrender.com/api/v1/collections/get/${collectionId}`)
             .then(res => {
@@ -781,7 +781,7 @@ function getCollectionByCollectionId ({collectionId}) {
 
 ### get collection webs by collection id
 
-```
+```js
 function getCollectionWebsByCollectionId ({collectionId,queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit;
@@ -798,7 +798,7 @@ function getCollectionWebsByCollectionId ({collectionId,queryParameters="page=1&
 
 ### get all collections by user id
 
-```
+```js
 function getAllCollectionsByUserId ({userId,queryParameters="page=1&limit=4&collectionType=public"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit , sortBy, sortOrder, collectionType;
@@ -815,7 +815,7 @@ function getAllCollectionsByUserId ({userId,queryParameters="page=1&limit=4&coll
 
 ### get collections created by me
 
-```
+```js
 function getCollectionsCreatedByUser ({queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit , sortBy, sortOrder;
@@ -833,7 +833,7 @@ function getCollectionsCreatedByUser ({queryParameters="page=1&limit=4"}) {
 
 ### get liked collections by userId
 
-```
+```js
 function getLikedCollectionsByUserId ({userId,queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit , sortBy, sortOrder;
@@ -850,7 +850,7 @@ function getLikedCollectionsByUserId ({userId,queryParameters="page=1&limit=4"})
 
 ### search from all collections
 
-```
+```js
 function searchFromAllCollections ({queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are search, page, limit;
@@ -867,7 +867,7 @@ function searchFromAllCollections ({queryParameters="page=1&limit=4"}) {
 
 ### search from my collections
 
-```
+```js
 function searchFromMyCollections ({queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are search, page, limit;
@@ -887,7 +887,7 @@ function searchFromMyCollections ({queryParameters="page=1&limit=4"}) {
 
 ### create new asset
 
-```
+```js
 function createNewAsset ({title,assetType,assetURL,assetPublicId,isPublic=true}) {
     axios.post(`https://codeweb.onrender.com/api/v1/assets/create`,{title,assetType,assetURL,assetPublicId,isPublic})
             .then(res => {
@@ -904,7 +904,7 @@ function createNewAsset ({title,assetType,assetURL,assetPublicId,isPublic=true})
 
 ### get all assets created by me
 
-```
+```js
 function getAllAssetsCreatedByMe ({queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit , assetType;
@@ -922,7 +922,7 @@ function getAllAssetsCreatedByMe ({queryParameters="page=1&limit=4"}) {
 
 ### get all public assets
 
-```
+```js
 function getAllPublicAssets ({queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit , assetType;
@@ -940,7 +940,7 @@ function getAllPublicAssets ({queryParameters="page=1&limit=4"}) {
 
 ### search from all assets
 
-```
+```js
 function searchFromAllAssets ({queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are search, page, limit, assetType;
@@ -958,7 +958,7 @@ function searchFromAllAssets ({queryParameters="page=1&limit=4"}) {
 
 ### get asset by asset id
 
-```
+```js
 function getAssetByAssetId ({assetId}) {
     axios.get(`https://codeweb.onrender.com/api/v1/assets/get/${assetId}`)
             .then(res => {
@@ -974,7 +974,7 @@ function getAssetByAssetId ({assetId}) {
 
 ### delete asset
 
-```
+```js
 function deleteAsset ({assetId}) {
     axios.delete(`https://codeweb.onrender.com/api/v1/assets/delete/${assetId}`)
             .then(res => {
@@ -990,7 +990,7 @@ function deleteAsset ({assetId}) {
 
 ### update asset
 
-```
+```js
 function updateAsset ({assetId,title,isPublic=true}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/assets/update/${assetId}`,{title,isPublic})
             .then(res => {
@@ -1006,7 +1006,7 @@ function updateAsset ({assetId,title,isPublic=true}) {
 
 ### get assets liked by me
 
-```
+```js
 function getAssetsLikedByMe ({queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit , assetType;
@@ -1026,7 +1026,7 @@ function getAssetsLikedByMe ({queryParameters="page=1&limit=4"}) {
 
 ### create new comment
 
-```
+```js
 function createNewComment ({web,text}) { // web = web id 
     axios.post(`https://codeweb.onrender.com/api/v1/comments/create`,{web,text})
             .then(res => {
@@ -1041,7 +1041,7 @@ function createNewComment ({web,text}) { // web = web id
 
 ### update comment
 
-```
+```js
 function updateComment ({commentId,text}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/comments/update/${commentId}`,{text})
             .then(res => {
@@ -1056,7 +1056,7 @@ function updateComment ({commentId,text}) {
 
 ### delete comment
 
-```
+```js
 function deleteComment ({commentId}) {
     axios.delete(`https://codeweb.onrender.com/api/v1/comments/delete/${commentId}`)
             .then(res => {
@@ -1071,7 +1071,7 @@ function deleteComment ({commentId}) {
 
 ### get all comments by web id
 
-```
+```js
 function getAllCommentsByWebId ({webId,queryParameters="page=1&limit=20"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit;
@@ -1087,7 +1087,7 @@ function getAllCommentsByWebId ({webId,queryParameters="page=1&limit=20"}) {
 
 ### get comment by comment id
 
-```
+```js
 function getCommentByCommentId ({commentId}) {
     axios.get(`https://codeweb.onrender.com/api/v1/comments/get/${commentId}`)
             .then(res => {
@@ -1103,7 +1103,7 @@ function getCommentByCommentId ({commentId}) {
 
 ### create new reply
 
-```
+```js
 function createNewReply ({commentId,text}) { 
     axios.post(`https://codeweb.onrender.com/api/v1/replays/create`,{commentId,text}) // in my next project i will use replyTo
             .then(res => {
@@ -1118,7 +1118,7 @@ function createNewReply ({commentId,text}) {
 
 ### update reply
 
-```
+```js
 function updateReply ({replayId,text}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/replays/update/${replayId}`,{text})
     // it is my mistake i use replay instead of reply but i can't change it now because it will break my project
@@ -1135,7 +1135,7 @@ function updateReply ({replayId,text}) {
 
 ### delete reply
 
-```
+```js
 function deleteReply ({replayId}) {
     axios.delete(`https://codeweb.onrender.com/api/v1/replays/delete/${replayId}`)
     // it is my mistake i use replay instead of reply but i can't change it now because it will break my project
@@ -1152,10 +1152,154 @@ function deleteReply ({replayId}) {
 
 ## likes routes
 
-### like web
+### toggle like web
+
+```js
+function likeWeb ({webId}) {
+    axios.post(`https://codeweb.onrender.com/api/v1/likes/web/${webId}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### toggle like asset
+
+```js
+function likeAsset ({assetId}) {
+    axios.post(`https://codeweb.onrender.com/api/v1/likes/asset/${assetId}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
 
 ```
 
+### toggle like collection
+
+```js
+function likeCollection ({collectionId}) {
+    axios.post(`https://codeweb.onrender.com/api/v1/likes/collection/${collectionId}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+
+```
+
+### toggle like comment
+
+```js
+function likeComment ({commentId}) {
+    axios.post(`https://codeweb.onrender.com/api/v1/likes/comment/${commentId}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+
+```
+
+### toggle like reply
+
+```js
+function likeReply ({replayId}) {
+    axios.post(`https://codeweb.onrender.com/api/v1/likes/replay/${replayId}`)
+    // it is my mistake i use replay instead of reply but i can't change it now because it will break my project
+    // it is recommended to use reply instead of replay in frontend
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+
+```
+
+## followers routes
+
+### toggle follow unfollow user
+
+```js
+function toggleFollowUnfollowUser ({profileId}) {
+    axios.post(`https://codeweb.onrender.com/api/v1/followers/toggle/${profileId}`)
+            .then(res => {
+                // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+
+```
+
+### get all followers by user id
+
+```js
+function getAllFollowersByUserId ({profileId,queryParameters="page=1&limit=20"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/followers/get-followers/${profileId}?${queryParameters}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+
+```
+
+### get all followings by user id
+
+```js
+function getAllFollowingsByUserId ({profileId,queryParameters="page=1&limit=20"}) {
+    // queryParameters = string contains all querys of url
+    // valid querys are page, limit;
+    axios.get(`https://codeweb.onrender.com/api/v1/followers/get-followings/${profileId}?${queryParameters}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+
+```
+
+
+## helth check route
+
+```js
+function helthCheck () {
+    axios.get(`https://codeweb.onrender.com/api/v1/healthCheck`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+
+```
 
 ---
 

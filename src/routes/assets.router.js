@@ -22,7 +22,7 @@ router.route("/get").get(getAllPublicAssets);
 router.route("/search/all-assets").get(searchFromPublicAssets);
 router.route("/get/:assetId").get(getAssetById);
 router.route("/delete/:assetId").delete(deleteAssetById);
-router.route("/update/:assetId").put(updateAssetById);
+router.route("/update/:assetId").patch(updateAssetById);
 router.route("/liked").get(getLikedAssets);
 
 

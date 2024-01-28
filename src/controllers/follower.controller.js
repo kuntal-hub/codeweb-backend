@@ -2,7 +2,7 @@ import {asyncHandler} from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponce } from '../utils/ApiResponce.js';
 import mongoose from 'mongoose';
-import {Follower } from "../models/followers.model.js"
+import {Follower } from "../models/followers.model.js";
 
 
 const toggleFollow = asyncHandler(async (req, res) => {
