@@ -374,6 +374,20 @@ function updateShowcase({showcase}) {
 }
 ```
 
+### check-username-availability
+
+```
+function checkUsernameAvailability({username}) {
+    axios.get(`https://codeweb.onrender.com/api/v1/users/check-username-availability/${username}`)
+        .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
 ## web routes
 
 ### create new web

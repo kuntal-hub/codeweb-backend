@@ -871,6 +871,25 @@ const updateShowcase = asyncHandler(async(req,res)=>{
     .json(new ApiResponce(200,user,"Showcase updated successfully"));
 })
 
+const checkUsernameAvailablity = asyncHandler(async(req,res)=>{
+    // get username from req.params
+    const {username} = req.params;
+    // check if username exists or not
+    if (!username) {
+        throw new ApiError(400,"username is required");
+    }
+    // find user by username
+    const user = await User.findOne({username:username}).select("_id username");
+    // check if user exists or not
+    if (user) {
+        throw new ApiError(400,"Username already exists");
+    }
+    // send response
+    return res
+    .status(200)
+    .json(new ApiResponce(200,{},"Username available"));
+})
+
 
 export {
     registerUser,
@@ -892,5 +911,6 @@ export {
     getPinedItems,
     addToPinedItems,
     removePinedItem,
-    updateShowcase
+    updateShowcase,
+    checkUsernameAvailablity
 }

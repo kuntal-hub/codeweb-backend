@@ -20,7 +20,8 @@ import {
     getPinedItems,
     addToPinedItems,
     removePinedItem,
-    updateShowcase
+    updateShowcase,
+    checkUsernameAvailablity
 } from "../controllers/user.controller.js"
 
 const router = Router();
@@ -45,6 +46,7 @@ router.route("/pined").get(verifyJWT,getPinedItems);
 router.route("/add-to-pined/:webId").patch(verifyJWT,addToPinedItems);
 router.route("/remove-pined/:webId").patch(verifyJWT,removePinedItem);
 router.route("/update-showcase").patch(verifyJWT,updateShowcase);
+router.route("/check-username-availability/:username").get(checkUsernameAvailablity);
 
 
 

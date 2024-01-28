@@ -14,7 +14,7 @@ const createCollection = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Name is required");
     }
     // check if collection with this name and user already exists or not
-    const collectionExists = await Collection.findOne({name,owner:req.user?._id});
+    const collectionExists = await Collection.findOne({name,owner:new mongoose.Types.ObjectId(req.user?._id)});
     // if collection with this name and user already exists then throw error
     if (collectionExists) throw new ApiError(400,"Collection with this name already exists");
     // if collection with this name and user does not exists then create collection
