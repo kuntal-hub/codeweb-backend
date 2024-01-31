@@ -216,6 +216,7 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
     // get userId from req.params
     const { userId } = req.params;
     // sortBy = views, createdAt, likesCount, commentsCount
+    // webType = public, private, forked
     // return array of webs created by usee (userId)
     // webType: public, private, forked
     // userId = the user whose webs are to be fetched
@@ -269,65 +270,67 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
         isLikedByMe = false;
     }
     // get webs
-    const webs = await Web.aggregatePaginate([
-    match,
-    {
-        $lookup:{
-            from:"users",
-            localField:"owner",
-            foreignField:"_id",
-            as:"owner",
-            pipeline:[
-                {
-                    $project:{
-                        username:1,
-                        fullName:1,
-                        avatar:1,
+    const aggregate = Web.aggregate([
+        match,
+        {
+            $lookup:{
+                from:"users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"owner",
+                pipeline:[
+                    {
+                        $project:{
+                            username:1,
+                            fullName:1,
+                            avatar:1,
+                        }
                     }
-                }
-            ]
+                ]
+            }
+        },
+        {
+            $lookup:{
+                from:"likes",
+                localField:"_id",
+                foreignField:"web",
+                as:"likes"
+            }
+        },
+        {
+            $lookup:{
+                from:"comments",
+                localField:"_id",
+                foreignField:"web",
+                as:"comments"
+            }
+        },
+        {
+            $addFields:{
+                likesCount:{
+                    $size:"$likes"
+                },
+                commentsCount:{
+                    $size:"$comments"
+                },
+                owner:{$first:"$owner"},
+                isLikedByMe:isLikedByMe
+            }
+        },
+        {
+            $project:{
+                likes:0,
+                comments:0,
+            }
+        },
+        {
+            $sort:{
+                [sortBy]:sortOrder === "asc" ? 1 : -1
+            }
         }
-    },
-    {
-        $lookup:{
-            from:"likes",
-            localField:"_id",
-            foreignField:"web",
-            as:"likes"
-        }
-    },
-    {
-        $lookup:{
-            from:"comments",
-            localField:"_id",
-            foreignField:"web",
-            as:"comments"
-        }
-    },
-    {
-        $addFields:{
-            likesCount:{
-                $size:"$likes"
-            },
-            commentsCount:{
-                $size:"$comments"
-            },
-            owner:{$first:"$owner"},
-            isLikedByMe:isLikedByMe
-        }
-    },
-    {
-        $project:{
-            likes:0,
-            comments:0,
-        }
-    },
-    {
-        $sort:{
-            [sortBy]:sortOrder === "asc" ? 1 : -1
-        }
-    }
-    ],{
+    ]);
+
+    const webs = await Web.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
@@ -370,7 +373,7 @@ const getLikedWebs = asyncHandler(async (req, res) => {
         isLikedByMe = false;
     }
     // get liked webs
-    const likedWebs = await Like.aggregatePaginate([
+    const aggregate = Like.aggregate([
         {
             $match:{
                 likedBy:new mongoose.Types.ObjectId(userId),
@@ -460,7 +463,9 @@ const getLikedWebs = asyncHandler(async (req, res) => {
                 [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
-    ],{
+    ]);
+
+    const likedWebs = await Like.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     })
@@ -482,8 +487,8 @@ const getFollowingWebs = asyncHandler(async (req, res) => {
     // return array of webs created by following users
     const { sortBy="views", sortOrder="desc", page=1, limit=4 } = req.query;
     // sortBy= views, createdAt, likesCount, commentsCount
-    
-    const followingWebs = await Follower.aggregatePaginate([
+
+    const aggregate = Follower.aggregate([
         {
             $match:{
                 followedBy:new mongoose.Types.ObjectId(req.user?._id)
@@ -576,7 +581,9 @@ const getFollowingWebs = asyncHandler(async (req, res) => {
                 [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
-    ],{
+    ]);
+    
+    const followingWebs = await Follower.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     })
@@ -616,7 +623,7 @@ const getTrendingWebs = asyncHandler(async (req, res) => {
         isLikedByMe = false;
     }
 
-    const webs = await Web.aggregatePaginate([
+    const aggregate = Web.aggregate([
         {
             $match:{
                 isPublic:true
@@ -686,7 +693,9 @@ const getTrendingWebs = asyncHandler(async (req, res) => {
                 createdAt:-1
             }
         }
-    ],{
+    ])
+
+    const webs = await Web.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     })
@@ -704,7 +713,7 @@ const getYourWorkWebs = asyncHandler(async (req, res) => {
     const { page=1, limit=4 , sortBy="views", sortOrder="desc"} = req.query;
     // sortBy = likesCount,views,commentsCount,createdAt
 
-    const webs = await Web.aggregatePaginate([
+    const aggregate = Web.aggregate([
         {
             $match:{
                 owner:new mongoose.Types.ObjectId(req.user?._id)
@@ -756,7 +765,9 @@ const getYourWorkWebs = asyncHandler(async (req, res) => {
                 [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
-    ],{
+    ]);
+
+    const webs = await Web.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     })
@@ -778,7 +789,7 @@ const searchFromWebsCreatedByMe = asyncHandler(async (req, res) => {
         throw new ApiError(400,"search query is required for searching webs");
     }
 
-    const webs = await Web.aggregatePaginate([
+    const aggregate = Web.aggregate([
         {
             $match:{
                 $and:[
@@ -838,7 +849,9 @@ const searchFromWebsCreatedByMe = asyncHandler(async (req, res) => {
                 score:-1
             }
         }
-    ],{
+    ])
+
+    const webs = await Web.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     })
@@ -860,7 +873,7 @@ const RecomendedpeopleToFollow = asyncHandler(async (req, res) => {
     // get all following ids
     const followingIds = following.map(f => new mongoose.Types.ObjectId(f.profile));
     // get all users who are not followed by user but have created public webs
-    const users = await User.aggregatePaginate([
+    const aggregate = User.aggregate([
         {
             $match:{
                 _id:{$nin:followingIds},
@@ -944,7 +957,9 @@ const RecomendedpeopleToFollow = asyncHandler(async (req, res) => {
                 showcaseWebs:1
             }
         }
-    ],{
+    ]);
+
+    const users = await User.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     })
@@ -970,22 +985,18 @@ const updateWeb = asyncHandler(async (req, res) => {
         throw new ApiError(400,"webId is required");
     }
     // check webId, title, description, html, css, js, image, isPublic are provided or not
-    if (!title || !description || !(html || css || js)) {
-        throw new ApiError(400,"title, description and html/css/js are required");  
+    if (!title && !description && !html && !css && !js) {
+        throw new ApiError(400,"at least one of title, description, html, css, js is required");  
     }
     // check image is provided or not
     if (!imageLocalPath) {
         throw new ApiError(400,"image not provided");
     }
     // get web by webId
-    const web = await Web.findById(webId);
+    const web = await Web.findOne({_id:new mongoose.Types.ObjectId(webId),owner:new mongoose.Types.ObjectId(req.user?._id)});
     // check web is found or not
     if (!web) {
-        throw new ApiError(404,"invalid webId");
-    }
-    // check web owner is same as user who is updating web
-    if (web.owner.toString() !== req.user?._id.toString()) {
-        throw new ApiError(403,"you are not allowed to update this web");
+        throw new ApiError(404,"invalid webId or unauthorized");
     }
     // delete image from cloudinary
     const deleteImage = await deleteFromCloudinary(web.public_id);
@@ -1000,8 +1011,8 @@ const updateWeb = asyncHandler(async (req, res) => {
         throw new ApiError(500,"something went wrong while uploading image on cloudinary");
     }
     // update web
-    web.title = title;
-    web.description = description;
+    web.title = title || web.title;
+    web.description = description || web.description;
     web.html = html || web.html;
     web.css = css || web.css;
     web.js = js || web.js;
@@ -1122,7 +1133,7 @@ const searchFromAllWebs = asyncHandler(async (req, res) => {
         isLikedByMe = false;
     }
     // get webs
-    const webs = await Web.aggregatePaginate([
+    const aggregate = Web.aggregate([
         {
             $match:{
                 $text:{$search:search},
@@ -1186,7 +1197,9 @@ const searchFromAllWebs = asyncHandler(async (req, res) => {
                 score:-1
             }
         }
-    ],{
+    ])
+
+    const webs = await Web.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     })

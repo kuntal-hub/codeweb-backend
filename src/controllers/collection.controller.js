@@ -37,29 +37,38 @@ const createCollection = asyncHandler(async(req,res)=>{
 const updateCollection = asyncHandler(async(req,res)=>{
     // get name and description from body
     const {name,description} = req.body;
+    // check if name and description is present or not
+    if(!name && !description) throw new ApiError(400,"name or description is required");
     // get collectionId from params
     const {collectionId} = req.params;
-    // check if name and collectionId both are present or not
-    if (!name || !collectionId) {
-        throw new ApiError(400,"collectionId and name is required");
+    // check if collectionId is present or not
+    if (!collectionId) {
+        throw new ApiError(400,"collectionId is required");
     }
-    // update collection
-    const collection = await Collection.findOneAndUpdate({
+    // find collection name already exists or not
+    const isCollectionExists = await Collection.findOne({name,owner:new mongoose.Types.ObjectId(req.user?._id)});
+    // if collection with this name and user already exists then throw error
+    if (isCollectionExists) throw new ApiError(400,"Collection with this name already exists");
+    // find collection by id
+    const collection = await Collection.findOne({
         _id:new mongoose.Types.ObjectId(collectionId),
         owner:new mongoose.Types.ObjectId(req.user?._id)
-    },
-    {
-        name,
-        description:description || ""
-    },{new:true});
+    });
     // check if collection is updated or not
     if (!collection) {
         throw new ApiError(404,"Collection not found or you are not authorized to update this collection");
     }
+    // update collection
+    collection.name = name || collection.name;
+    collection.description = description || collection.description;
+    // save collection
+    const savedCollection = await collection.save({validateBeforeSave:false});
+    // check if collection is saved or not
+    if (!savedCollection) throw new ApiError(500,"Something went wrong while updating collection");
     // return response
     return res
     .status(200)
-    .json(new ApiResponce(200,collection,"Collection updated successfully"))
+    .json(new ApiResponce(200,savedCollection,"Collection updated successfully"))
 })
 
 const deleteCollection = asyncHandler(async(req,res)=>{
@@ -202,7 +211,7 @@ const updateViewCount = asyncHandler(async(req,res)=>{
     // return response
     return res
     .status(200)
-    .json(new ApiResponce(200,collection,"Collection view count updated successfully"))
+    .json(new ApiResponce(200,{},"Collection view count updated successfully"))
 })
 
 const getCollectionByCollectionId = asyncHandler(async(req,res)=>{
@@ -301,13 +310,13 @@ const getCollectionByCollectionId = asyncHandler(async(req,res)=>{
         } 
     ])
     // check if collection is found or not
-    if (!collection) {
+    if (collection.length === 0) {
         throw new ApiError(404,"Collection not found");
     }
     // return response
     return res
     .status(200)
-    .json(new ApiResponce(200,collection,"Collection fetched successfully"))
+    .json(new ApiResponce(200,collection[0],"Collection fetched successfully"))
 })
 
 
@@ -342,7 +351,7 @@ const getCollectionWEbsByCollectionId = asyncHandler(async(req,res)=>{
         isLikedByMe = false;
     }
     // get webs from collection
-    const webs = await Web.aggregatePaginate([
+    const aggregate = Web.aggregate([
         {
             $match:{
                 _id:{$in:collection.webs}
@@ -395,7 +404,9 @@ const getCollectionWEbsByCollectionId = asyncHandler(async(req,res)=>{
                 comments:0
             }
         }
-    ],{
+    ])
+
+    const webs = await Web.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
@@ -416,6 +427,7 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
     const {userId} = req.params;
     // get user_id collectionType,sortBy,sortOrder,page,limit from query
     const {collectionType="public",sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
+    // collectionType = public,private
     // sortBy = views,likesCount,websCount,createdAt
     // check if userId is present or not
     if (!userId) {
@@ -438,7 +450,7 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
         isLikedByMe = false;
     }
     // get collections
-    const collections =  await Collection.aggregatePaginate([
+    const aggregate = Collection.aggregate([
         {
             $match:{
                 owner:new mongoose.Types.ObjectId(userId),
@@ -493,7 +505,9 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
                 [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
-    ],{
+    ])
+
+    const collections =  await Collection.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     })
@@ -506,12 +520,13 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
     .status(200)
     .json(new ApiResponce(200,collections,"Collections fetched successfully"))
 })
+
 const getCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
     // get all collections created by user
     const { sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
     // sortBy = views,likesCount,websCount,createdAt
     // get collections
-    const collections =  await Collection.aggregatePaginate([
+    const aggregate = Collection.aggregate([
         {
             $match:{
                 owner:new mongoose.Types.ObjectId(req.user?._id),
@@ -573,7 +588,9 @@ const getCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
                 [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
-    ],{
+    ]);
+
+    const collections =  await Collection.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     })
@@ -612,7 +629,7 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
         isLikedByMe = false;
     }
     // get liked collections
-    const likedCollections = await Like.aggregatePaginate([
+    const aggregate = Like.aggregate([
         {
             $match:{
                 likedBy:new mongoose.Types.ObjectId(userId),
@@ -692,7 +709,9 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
                 [sortBy]:sortOrder === "asc" ? 1 : -1
             }
         }
-    ],{
+    ])
+
+    const likedCollections = await Like.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     })
@@ -730,7 +749,7 @@ const searchFromAllCollections = asyncHandler(async(req,res)=>{
         isLikedByMe = false;
     }
     // get collections
-    const collections = await Collection.aggregatePaginate([
+    const aggregate = Collection.aggregate([
         {
             $match:{
                 $text:{
@@ -804,7 +823,9 @@ const searchFromAllCollections = asyncHandler(async(req,res)=>{
         {
             $sort:{score:-1}
         }
-    ],{
+    ])
+
+    const collections = await Collection.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
@@ -825,7 +846,7 @@ const searchFromAllCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"search query is required for searchin collections");
     }
 
-    const collections = await Collection.aggregatePaginate([
+    const aggregate = Collection.aggregate([
         {
             $match:{
                 $text:{
@@ -888,7 +909,9 @@ const searchFromAllCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
         {
             $sort:{score:-1}
         }
-    ],{
+    ])
+
+    const collections = await Collection.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
@@ -900,6 +923,24 @@ const searchFromAllCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
     return res
     .status(200)
     .json(new ApiResponce(200,collections,"Collections fetched successfully"))
+})
+
+const checkCollectionNameAvailability = asyncHandler(async(req,res)=>{
+    const {name} = req.params;
+
+    if (!name) {
+        throw new ApiError(400,"name is required");
+    }
+
+    const collection = await Collection.findOne({name:name.replaceAll("-"," "),owner:new mongoose.Types.ObjectId(req.user?._id)});
+
+    if (collection) {
+        throw new ApiError(400,"Collection with this name already exists");
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponce(200,{},"Collection name is available"))
 })
 
 export {
@@ -917,4 +958,5 @@ export {
     searchFromAllCollections,
     searchFromAllCollectionsCreatedByMe,
     getCollectionsCreatedByMe,
+    checkCollectionNameAvailability,
 }

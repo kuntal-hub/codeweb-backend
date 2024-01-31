@@ -882,6 +882,21 @@ function searchFromMyCollections ({queryParameters="page=1&limit=4"}) {
 }
 ```
 
+### check collection name availability
+
+```js
+function checkCollectionNameAvailability ({name}) {
+    axios.get(`https://codeweb.onrender.com/api/v1/collections/check-name-availability/${name.replaceAll(" ","-")}`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
 ## asset routes
 
 ### create new asset

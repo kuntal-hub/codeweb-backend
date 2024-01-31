@@ -14,7 +14,8 @@ import {
     getLikedCollectionsByUserId,
     searchFromAllCollections,
     searchFromAllCollectionsCreatedByMe,
-    getCollectionsCreatedByMe
+    getCollectionsCreatedByMe,
+    checkCollectionNameAvailability
 } from "../controllers/collection.controller.js"
 
 
@@ -34,6 +35,7 @@ router.route("/my-collections").get(verifyJWT, getCollectionsCreatedByMe);
 router.route("/liked/:userId").get(checkCurrentUser,getLikedCollectionsByUserId);
 router.route("/search/all-collections").get(checkCurrentUser,searchFromAllCollections);
 router.route("/search/my-collections").get(verifyJWT,searchFromAllCollectionsCreatedByMe);
+router.route("/check-name-availability/:name").get(verifyJWT,checkCollectionNameAvailability);
 
 
 
