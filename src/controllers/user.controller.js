@@ -453,10 +453,13 @@ const chengeEmail = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Something went wrong while updating email");
     }
 
+    savedUser.password = "";
+    savedUser.refreshToken = "";
+
     // send response
     res
     .status(200)
-    .json(new ApiResponce(200,{},"Email changed successfully"));
+    .json(new ApiResponce(200,savedUser,"Email changed successfully"));
 
     const redirectURL = `${verificationURL}?token=${generateUserVerificationToken(user)}`
 
@@ -661,9 +664,20 @@ const getUserProfile = asyncHandler(async(req,res)=>{
                         }
                     },
                     {
+                        $lookup:{
+                            from:"comments",
+                            localField:"_id",
+                            foreignField:"web",
+                            as:"comments"
+                        }
+                    },
+                    {
                         $addFields:{
                             likesCount:{
                                 $size:"$likes"
+                            },
+                            commentsCount:{
+                                $size:"$comments"
                             },
                             isLiked:isLiked
                         }
@@ -679,6 +693,7 @@ const getUserProfile = asyncHandler(async(req,res)=>{
                             public_id:1,
                             views:1,
                             likesCount:1,
+                            commentsCount:1,
                             isLiked:1
                         }
                     }
@@ -715,7 +730,7 @@ const getUserProfile = asyncHandler(async(req,res)=>{
 const getPinedItems = asyncHandler(async(req,res)=>{
     const {page=1,limit=10} = req.query;
     // get user from database
-    const user = await User.aggregatePaginate([
+    const aggregate = User.aggregate([
         {
             $match:{
                 _id:new mongoose.Types.ObjectId(req.user?._id)
@@ -796,18 +811,18 @@ const getPinedItems = asyncHandler(async(req,res)=>{
                 newRoot:"$pined"
             }
         }
-    ],{
+    ]);
+
+    const pinedItems = await User.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
     // check if user exists or not
-    if (user.length === 0) {
-        throw new ApiError(400,"user dose not exists");
-    }
+    if(!pinedItems) throw new ApiError(500,"something went wrong while geting pined items")
     // send response
     return res
     .status(200)
-    .json(new ApiResponce(200,user[0].pined,"Pined items get successfully"));
+    .json(new ApiResponce(200,pinedItems,"Pined items get successfully"));
 })
 
 const addToPinedItems = asyncHandler(async(req,res)=>{
@@ -823,13 +838,13 @@ const addToPinedItems = asyncHandler(async(req,res)=>{
     if (!web) throw new ApiError(400,"Web dose not exists");
     // find user by req.user._id and add webId to pined items
     const user = await User.findByIdAndUpdate(req.user?._id,{$addToSet:{pined:new mongoose.Types.ObjectId(webId)}},{new:true})
-    .select("-password -refreshToken -__v");
+    .select("_id username");
     // check if user exists or not
     if (!user) throw new ApiError(400,"User dose not exists");
     // send response
     return res
     .status(200)
-    .json(new ApiResponce(200,user,"Web added to pined items successfully"));
+    .json(new ApiResponce(200,{},"Web added to pined items successfully"));
 })
 
 const removePinedItem = asyncHandler(async(req,res)=>{
@@ -841,13 +856,13 @@ const removePinedItem = asyncHandler(async(req,res)=>{
     }
     // remove webId from pined items
     const user = await User.findByIdAndUpdate(req.user?._id,{$pull:{pined:new mongoose.Types.ObjectId(webId)}},{new:true})
-    .select("-password -refreshToken -__v");
+    .select("_id username");
     // check if user exists or not
     if (!user) throw new ApiError(400,"User dose not exists");
     // send response
     return res 
     .status(200)
-    .json(new ApiResponce(200,user,"Web removed from pined items successfully"));
+    .json(new ApiResponce(200,{},"Web removed from pined items successfully"));
 })
 
 const updateShowcase = asyncHandler(async(req,res)=>{

@@ -303,7 +303,6 @@ function updateCoverImage({image,public_id}) {
 
 ```js
 function getUserProfile({username}) {
-    // if user not loged in then currentUser is optional currentUser = _id of loged in user
     axios.get(`https://codeweb.onrender.com/api/v1/users/profile/${username}`)
         .then(res => {
             console.log(res.data)
