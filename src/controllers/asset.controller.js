@@ -36,7 +36,7 @@ const getAllAssetsCreatedByUser = asyncHandler(async(req,res)=>{
     // get page and limit from query
     const  {page=1,limit=20,assetType="image"} = req.query;
     // get assets created by user
-    const assets = Asset.aggregatePaginate([
+    const aggregate = Asset.aggregate([
         {
             $match:{
                 owner:new mongoose.Types.ObjectId(req.user?._id),
@@ -75,7 +75,9 @@ const getAllAssetsCreatedByUser = asyncHandler(async(req,res)=>{
                 createdAt:-1
             }
         }
-    ],{
+    ]);
+
+    const assets = Asset.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
@@ -93,7 +95,7 @@ const getAllPublicAssets = asyncHandler(async(req,res)=>{
     // get page and limit from query
     const {page=1,limit=20,assetType="image"} = req.query;
     // get all public assets
-    const assets = Asset.aggregatePaginate([
+    const aggregate = Asset.aggregate([
         {
             $match:{
                 isPublic:true,
@@ -132,7 +134,9 @@ const getAllPublicAssets = asyncHandler(async(req,res)=>{
                 likesCount:-1
             }
         }
-    ],{
+    ])
+
+    const assets = Asset.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
@@ -154,7 +158,7 @@ const searchFromPublicAssets = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Please provide search query");
     }
     // get all public assets which matches the search query
-    const assets = Asset.aggregatePaginate([
+    const aggregate = Asset.aggregate([
         {
             $match:{
                 $and:[
@@ -206,7 +210,9 @@ const searchFromPublicAssets = asyncHandler(async(req,res)=>{
                 likesCount:-1
             }
         }
-    ],{
+    ]);
+
+    const assets = Asset.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
@@ -316,13 +322,13 @@ const getAssetById = asyncHandler(async(req,res)=>{
         }
     ])
     // check if asset is present or not
-    if (!asset) {
+    if (!asset || asset.length === 0) {
         throw new ApiError(400,"asset not found invalid assetId");
     }
     // return response
     return res
         .status(200)
-        .json(new ApiResponce(200,asset,"Asset fetched successfully"));
+        .json(new ApiResponce(200,asset[0],"Asset fetched successfully"));
 })
 
 const deleteAssetById = asyncHandler(async(req,res)=>{
@@ -389,7 +395,7 @@ const getLikedAssets = asyncHandler(async(req,res)=>{
     // get page and limit from query
     const {page=1,limit=20,assetType="image"} = req.query;
     // get all liked assets
-    const assets = Like.aggregatePaginate([
+    const aggregate = Like.aggregate([
         {
             $match:{
                 likedBy:new mongoose.Types.ObjectId(req.user?._id),
@@ -463,7 +469,9 @@ const getLikedAssets = asyncHandler(async(req,res)=>{
                 createdAt:-1
             }
         }
-    ],{
+    ]);
+
+    const assets = Like.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
