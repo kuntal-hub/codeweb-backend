@@ -55,7 +55,7 @@ const getFollowers = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'profileId id is required');
     }
     // get followers 
-    const followers = await Follower.aggregatePaginate([
+    const aggregate = Follower.aggregate([
         {
             $match: {
                 profile: new mongoose.Types.ObjectId(profileId)
@@ -134,7 +134,9 @@ const getFollowers = asyncHandler(async (req, res) => {
                 newRoot:"$followedBy"
             }
         },
-    ],{
+    ])
+
+    const followers = await Follower.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
@@ -158,7 +160,7 @@ const getFollowings = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'profileId id is required');
     }
     // get followings
-    const followings = await Follower.aggregatePaginate([
+    const aggregate = Follower.aggregate([
         {
             $match:{
                 followedBy:new mongoose.Types.ObjectId(profileId)
@@ -237,7 +239,9 @@ const getFollowings = asyncHandler(async (req, res) => {
                 newRoot:"$profile"
             }
         }
-    ],{
+    ]);
+    
+    const followings = await Follower.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });

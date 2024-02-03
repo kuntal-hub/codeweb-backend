@@ -96,7 +96,7 @@ const getAllWebComments = asyncHandler(async (req, res) => {
         throw new ApiError(400, 'Web id is required');
     }
     // get comments
-    const comments = await Comment.aggregatePaginate([
+    const aggregate = Comment.aggregate([
         {
             $match:{
                 web:new mongoose.Types.ObjectId(webId),
@@ -168,7 +168,9 @@ const getAllWebComments = asyncHandler(async (req, res) => {
                 createdAt:-1
             }
         }
-    ],{
+    ]);
+
+    const comments = await Comment.aggregatePaginate(aggregate,{
         limit:parseInt(limit),
         page:parseInt(page)
     });
@@ -319,13 +321,13 @@ const getCommentById = asyncHandler(async (req, res) => {
         }
     ]);
     // check if comment is fetched or not
-    if (!comment) {
+    if (!comment || comment.length === 0) {
         throw new ApiError(404, 'Comment not found');
     }
     // return response
     return res
         .status(200)
-        .json(new ApiResponce(200,comment, 'Comment fetched successfully'));
+        .json(new ApiResponce(200,comment[0], 'Comment fetched successfully'));
 })
 
 // export all controllers
