@@ -868,75 +868,96 @@ const searchFromWebsCreatedByMe = asyncHandler(async (req, res) => {
 const RecomendedpeopleToFollow = asyncHandler(async (req, res) => {
     // return array of users who are not followed by user but have created public webs
     const { page=1, limit=8 } = req.query;
-    // get all following ids
-    const following = await Follower.find({followedBy:new mongoose.Types.ObjectId(req.user?._id)}).select("profile");
-    // get all following ids
-    const followingIds = following.map(f => new mongoose.Types.ObjectId(f.profile));
     // get all users who are not followed by user but have created public webs
-    const aggregate = User.aggregate([
+    const aggregate = Follower.aggregate([
         {
             $match:{
-                _id:{$nin:followingIds},
-                isVerified:true
+                followedBy:{
+                    $ne:new mongoose.Types.ObjectId(req.user?._id)
+                }
             }
         },
         {
             $lookup:{
-                from:"webs",
-                localField:"_id",
-                foreignField:"owner",
-                as:"webs",
+                from:"users",
+                localField:"profile",
+                foreignField:"_id",
+                as:"user",
                 pipeline:[
                     {
-                        $match:{
-                            isPublic:true
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            $lookup:{
-                from:"followers",
-                localField:"_id",
-                foreignField:"profile",
-                as:"followers"
-            }
-        },
-        {
-            $lookup:{
-                from:"webs",
-                localField:"_id",
-                foreignField:"owner",
-                as:"showcaseWebs",
-                pipeline:[
-                    {
-                        $match:{
-                            isPublic:true
+                        $lookup:{
+                            from:"followers",
+                            localField:"_id",
+                            foreignField:"profile",
+                            as:"followers"
                         }
                     },
                     {
-                        $sort:{
-                            views:-1
+                        $lookup:{
+                            from:"webs",
+                            localField:"_id",
+                            foreignField:"owner",
+                            as:"webs",
+                            pipeline:[
+                                {
+                                    $match:{
+                                        isPublic:true
+                                    }
+                                },
+                                {
+                                    $sort:{
+                                        views:-1
+                                    }
+                                }
+                            ]
                         }
                     },
                     {
-                        $limit:2
+                        $addFields:{
+                            websCount:{
+                                $size:"$webs"
+                            },
+                            followersCount:{
+                                $size:"$followers"
+                            },
+                            totalWebViews:{
+                                $sum:"$webs.views"
+                            },
+                            showcaseWebs:{
+                                $slice:["$webs",2]
+                            }
+                        }
+                    },
+                    {
+                        $project:{
+                            followersCount:1,
+                            totalWebViews:1,
+                            websCount:1,
+                            username:1,
+                            fullName:1,
+                            avatar:1,
+                            showcaseWebs:1,
+                            isVerified:1
+                        }
                     }
                 ]
             }
         },
         {
             $addFields:{
-                websCount:{
-                    $size:"$webs"
-                },
-                followersCount:{
-                    $size:"$followers"
-                },
-                totalWebViews:{
-                    $sum:"$webs.views"
-                },
+                user:{
+                    $first:"$user"
+                }
+            }
+        },
+        {
+            $replaceRoot:{
+                newRoot:"$user"
+            }
+        },
+        {
+            $match:{
+                isVerified:true
             }
         },
         {
@@ -945,21 +966,10 @@ const RecomendedpeopleToFollow = asyncHandler(async (req, res) => {
                 totalWebViews:-1,
                 websCount:-1
             }
-        },
-        {
-            $project:{
-                followersCount:1,
-                totalWebViews:1,
-                websCount:1,
-                username:1,
-                fullName:1,
-                avatar:1,
-                showcaseWebs:1
-            }
         }
     ]);
 
-    const users = await User.aggregatePaginate(aggregate,{
+    const users = await Follower.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     })

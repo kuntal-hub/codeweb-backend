@@ -24,7 +24,7 @@ const userSchema = new Schema({
         type:String,
         required:true,
         trim:true,
-        index:true
+        index:"text"
     },
     password:{
         type:String,

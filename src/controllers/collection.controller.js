@@ -351,62 +351,85 @@ const getCollectionWEbsByCollectionId = asyncHandler(async(req,res)=>{
         isLikedByMe = false;
     }
     // get webs from collection
-    const aggregate = Web.aggregate([
+    const aggregate = Collection.aggregate([
         {
             $match:{
-                _id:{$in:collection.webs}
+                _id:new mongoose.Types.ObjectId(collectionId)
             }
         },
         {
             $lookup:{
-                from:"users",
-                localField:"owner",
+                from:"webs",
+                localField:"webs",
                 foreignField:"_id",
-                as:"owner",
+                as:"webs",
                 pipeline:[
                     {
+                        $match:{
+                            isPublic:true
+                        }
+                    },
+                    {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        fullName:1,
+                                        username:1,
+                                        avatar:1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $lookup:{
+                            from:"likes",
+                            localField:"_id",
+                            foreignField:"web",
+                            as:"likes"
+                        }
+                    },
+                    {
+                        $lookup:{
+                            from:"comments",
+                            localField:"_id",
+                            foreignField:"web",
+                            as:"comments"
+                        }
+                    },
+                    {
+                        $addFields:{
+                            likesCount:{$size:"$likes"},
+                            commentsCount:{$size:"$comments"},
+                            owner:{$first:"$owner"},
+                            isLikedByMe:isLikedByMe
+                        }
+                    },
+                    {
                         $project:{
-                            fullName:1,
-                            username:1,
-                            avatar:1
+                            likes:0,
+                            comments:0
                         }
                     }
                 ]
             }
         },
         {
-            $lookup:{
-                from:"likes",
-                localField:"_id",
-                foreignField:"web",
-                as:"likes"
-            }
+            $unwind:"$webs"
         },
         {
-            $lookup:{
-                from:"comments",
-                localField:"_id",
-                foreignField:"web",
-                as:"comments"
-            }
-        },
-        {
-            $addFields:{
-                likesCount:{$size:"$likes"},
-                commentsCount:{$size:"$comments"},
-                owner:{$first:"$owner"},
-                isLikedByMe:isLikedByMe
-            }
-        },
-        {
-            $project:{
-                likes:0,
-                comments:0
+            $replaceRoot:{
+                newRoot:"$webs"
             }
         }
     ])
 
-    const webs = await Web.aggregatePaginate(aggregate,{
+    const webs = await Collection.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
@@ -490,7 +513,7 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
         {
             $addFields:{
                 websCount:{$size:"$webs"},
-                webs:{$slice:["$webs",0,4]},
+                webs:{$slice:["$webs",4]},
                 likesCount:{$size:"$likes"},
                 isLikedByMe:isLikedByMe
             }
@@ -565,7 +588,7 @@ const getCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
         {
             $addFields:{
                 websCount:{$size:"$webs"},
-                webs:{$slice:["$webs",0,4]},
+                webs:{$slice:["$webs",4]},
                 likesCount:{$size:"$likes"},
                 isLikedByMe:{
                     $cond:{
@@ -681,7 +704,7 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
                     {
                         $addFields:{
                             websCount:{$size:"$webs"},
-                            webs:{$slice:["$webs",0,4]},
+                            webs:{$slice:["$webs",4]},
                             likesCount:{$size:"$likes"},
                             isLikedByMe:isLikedByMe
                         }

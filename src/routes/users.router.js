@@ -17,11 +17,13 @@ import {
     updateAvatar,
     updateCoverImage,
     getUserProfile,
+    getShowcaseItems,
     getPinedItems,
     addToPinedItems,
     removePinedItem,
     updateShowcase,
-    checkUsernameAvailablity
+    checkUsernameAvailablity,
+    searchUsers
 } from "../controllers/user.controller.js"
 
 const router = Router();
@@ -42,11 +44,13 @@ router.route("/update").patch(verifyJWT,Updateduser);
 router.route("/update-avatar").patch(verifyJWT,updateAvatar);
 router.route("/update-cover-image").patch(verifyJWT,updateCoverImage);
 router.route("/profile/:username").get(checkCurrentUser,getUserProfile);
+router.route("/showcase/:username").get(checkCurrentUser,getShowcaseItems);
 router.route("/pined").get(verifyJWT,getPinedItems);
 router.route("/add-to-pined/:webId").patch(verifyJWT,addToPinedItems);
 router.route("/remove-pined/:webId").patch(verifyJWT,removePinedItem);
 router.route("/update-showcase").patch(verifyJWT,updateShowcase);
 router.route("/check-username-availability/:username").get(checkUsernameAvailablity);
+router.route("/search").get(checkCurrentUser,searchUsers);
 
 
 

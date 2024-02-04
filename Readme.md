@@ -313,6 +313,20 @@ function getUserProfile({username}) {
 }
 ```
 
+### get showcaseItems
+
+```js
+function getShowcaseItems({username}) {
+    axios.get(`https://codeweb.onrender.com/api/v1/users/showcase/${username}`)
+        .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
 ### get pined items
 
 ```js
@@ -378,6 +392,20 @@ function updateShowcase({showcase}) {
 ```js
 function checkUsernameAvailability({username}) {
     axios.get(`https://codeweb.onrender.com/api/v1/users/check-username-availability/${username}`)
+        .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
+### search-users
+
+```js
+function searchUsers({search,page=1,limit=6}) {
+    axios.get(`https://codeweb.onrender.com/api/v1/users/search?search=${search}&page=${page}&limit=${limit}`)
         .then(res => {
             console.log(res.data)
         })

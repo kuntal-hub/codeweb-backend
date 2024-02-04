@@ -133,7 +133,7 @@ const loginUser = asyncHandler(async(req,res)=>{
     const accessToken = user.generateAccessToken();
     const refreshToken = user.refreshToken;
     // find user by id and send response
-    const logedInUser = await User.findById(user._id).select("-password -refreshToken -__v -pined");
+    const logedInUser = await User.findById(user._id).select("-password -refreshToken -__v -pined -showcase");
 
     const options = {
         httpOnly: true,
@@ -214,7 +214,7 @@ const getCurrentUser = asyncHandler(async(req,res)=>{
 
 const requestVerifyEmail = asyncHandler(async(req,res)=>{
     // get _id from req.user and find user by _id
-    const user = await User.findById(req.user?._id).select("-password -refreshToken -__v -pined");
+    const user = await User.findById(req.user?._id).select("-password -refreshToken -__v -pined -showcase");
     // get verificationURL from req.body
     const {verificationURL=""} = req.body;
     // check if user exists or not
@@ -248,7 +248,7 @@ try {
             throw new ApiError(403,"Invalid token");
         }
         // find user by id and check if user exists or not
-        const user = await User.findById(decodedToken?._id).select("-password -refreshToken -__v -pined");
+        const user = await User.findById(decodedToken?._id).select("-password -refreshToken -__v -pined -showcase");
         if (!user) {
             throw new ApiError(403,"User dose not exists");
         }
@@ -282,7 +282,7 @@ const requestForgotPasswordEmail = asyncHandler(async(req,res)=>{
     // validate email
     if (!validateEmail(email)) throw new ApiError(400,"Invalid email address");
     // find user by email
-    const user = await User.findOne({email:email}).select("-password -refreshToken -__v -pined");
+    const user = await User.findOne({email:email}).select("-password -refreshToken -__v -pined -showcase");
     // check if user exists or not
     if (!user) {
         throw new ApiError(400,"User dose not exists");
@@ -318,7 +318,7 @@ const resetPassword = asyncHandler(async(req,res)=>{
             throw new ApiError(403,"unauthorized request");
         }
         // find user by id and check if user exists or not
-        const user = await User.findById(decodedToken?._id).select("-pined");
+        const user = await User.findById(decodedToken?._id).select("-pined -showcase");
 
         if (!user) throw new ApiError(400,"User dose not exists");
         // if everything is fine then change password and save user
@@ -346,7 +346,7 @@ const Updateduser = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"atleast one field is required"); 
     }
     // find user by req.user._id
-    const user = await User.findById(req.user?._id).select("-password -refreshToken -__v -pined");
+    const user = await User.findById(req.user?._id).select("-password -refreshToken -__v -pined -showcase");
     // check if user exists or not
     if (!user) {
         throw new ApiError(400,"user dose not exists");
@@ -384,7 +384,7 @@ const Updateduser = asyncHandler(async(req,res)=>{
 
 const chengePassword = asyncHandler(async(req,res)=>{
     // find user by req.user._id
-    const user = await User.findById(req.user?._id).select("-__v -pined");
+    const user = await User.findById(req.user?._id).select("-__v -pined -showcase");
     // get oldPassword and newPassword from req.body
     const {oldPassword,newPassword} = req.body;
     // check if oldPassword and newPassword exists
@@ -419,7 +419,7 @@ const chengePassword = asyncHandler(async(req,res)=>{
 
 const chengeEmail = asyncHandler(async(req,res)=>{
     // find user by req.user._id
-    const user = await User.findById(req.user?._id).select("-__v -pined");
+    const user = await User.findById(req.user?._id).select("-__v -pined -showcase");
     // get email and password from req.body
     const {email,password,verificationURL=""} = req.body;
     // check if email and password exists
@@ -470,7 +470,7 @@ const chengeEmail = asyncHandler(async(req,res)=>{
 
 const deleteUser = asyncHandler(async(req,res)=>{
     // find user by req.user._id
-    const user = await User.findById(req.user?._id).select("-__v -pined");
+    const user = await User.findById(req.user?._id).select("-__v -pined -showcase");
     // get password from req.body
     const {password} = req.body;
     // check if password exists or not
@@ -519,7 +519,7 @@ const updateAvatar = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"image and public_id is required");
     }
     // find user by req.user._id
-    const user = await User.findById(req.user?._id).select("-password -refreshToken -__v -pined");
+    const user = await User.findById(req.user?._id).select("-password -refreshToken -__v -pined -showcase");
     // check if user exists or not
     if (!user) {
         throw new ApiError(400,"user dose not exists");
@@ -560,7 +560,7 @@ const updateCoverImage = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"image and public_id is required");
     }
     // find user by req.user._id
-    const user = await User.findById(req.user?._id).select("-password -refreshToken -__v -pined");
+    const user = await User.findById(req.user?._id).select("-password -refreshToken -__v -pined -showcase");
     // check if user exists or not
     if (!user) {
         throw new ApiError(400,"user dose not exists");
@@ -603,7 +603,7 @@ const getUserProfile = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"username is required");
     }
 
-    let isFollowing,isLiked;
+    let isFollowing;
     // check if currentUser exists or not and set isFollowing and isLiked
     if(currentUser){
         isFollowing = {
@@ -613,16 +613,8 @@ const getUserProfile = asyncHandler(async(req,res)=>{
                 else: false
             }
         };
-        isLiked = {
-            $cond: {
-                if: {$in: [currentUser, "$likes.likedBy"]},
-                then: true,
-                else: false
-            }
-        }
     }else{
         isFollowing = false;
-        isLiked = false;
     }
 
     // get profile
@@ -646,6 +638,56 @@ const getUserProfile = asyncHandler(async(req,res)=>{
                 localField:"_id",
                 foreignField:"followedBy",
                 as:"following"
+            }
+        },
+        {
+            $addFields:{
+                followersCount:{$size:"$followers"},
+                followingCount:{$size:"$following"},
+                isFollowing:isFollowing
+            }
+        },
+        {
+            $project:{
+                password:0,
+                refreshToken:0,
+                followers:0,
+                following:0,
+                pined:0,
+                showcase:0
+            }
+        }
+    ])
+    // check if profile exists or not
+    if (profile.length === 0) {
+        throw new ApiError(400,"user dose not exists");
+    }
+    // send response
+    return res
+    .status(200)
+    .json(new ApiResponce(200,profile[0],"User profile get successfully"));
+})
+
+const getShowcaseItems = asyncHandler(async(req,res)=>{
+    // get username from req.params
+    const {username} = req.params;
+    let isLiked;
+    if (req.user) {
+        isLiked = {
+            $cond: {
+                if: {$in: [new mongoose.Types.ObjectId(req.user._id), "$likes.likedBy"]},
+                then: true,
+                else: false
+            }
+        }
+    }else{
+        isLiked = false;
+    };
+    // get showcase items from database
+    const items = await User.aggregate([
+        {
+            $match:{
+                username:username
             }
         },
         {
@@ -701,30 +743,22 @@ const getUserProfile = asyncHandler(async(req,res)=>{
             }
         },
         {
-            $addFields:{
-                followersCount:{$size:"$followers"},
-                followingCount:{$size:"$following"},
-                isFollowing:isFollowing
-            }
+            $unwind:"$showcase"
         },
         {
-            $project:{
-                password:0,
-                refreshToken:0,
-                followers:0,
-                following:0,
-                pined:0
+            $replaceRoot:{
+                newRoot:"$showcase"
             }
         }
-    ])
-    // check if profile exists or not
-    if (profile.length === 0) {
-        throw new ApiError(400,"user dose not exists");
-    }
+    ]);
+
+    // check if items exists or not
+    if (!items) throw new ApiError(500,"something went wrong while geting showcase items")
+
     // send response
     return res
     .status(200)
-    .json(new ApiResponce(200,profile[0],"User profile get successfully"));
+    .json(new ApiResponce(200,items,"Showcase items get successfully"));
 })
 
 const getPinedItems = asyncHandler(async(req,res)=>{
@@ -905,6 +939,121 @@ const checkUsernameAvailablity = asyncHandler(async(req,res)=>{
     .json(new ApiResponce(200,{},"Username available"));
 })
 
+const searchUsers = asyncHandler(async(req,res)=>{
+    // get search from req.query
+    const {search,page=1,limit=6} = req.query;
+    // check if search exists or not
+    if (!search) {
+        throw new ApiError(400,"search is required");
+    }
+    // check if user is logged in or not
+    let isFollowedByMe;
+    if (req.user) {
+        isFollowedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
+    } else {
+        isFollowedByMe = false;
+    }
+    // find user by search
+    const aggregate = User.aggregate([
+        {
+            $match:{
+                $or:[
+                    {username:search},
+                    {$text:{$search:search}}
+                ]
+            }
+        },
+        {
+            $lookup:{
+                from:"webs",
+                localField:"_id",
+                foreignField:"owner",
+                as:"webs",
+                pipeline:[
+                    {
+                        $match:{
+                            isPublic:true
+                        }
+                    },
+                    {
+                        $sort:{
+                            views:-1
+                        }
+                    },
+                    {
+                        $project:{
+                            title:1,
+                            _id:1,
+                            image:1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $lookup:{
+                from:"followers",
+                localField:"_id",
+                foreignField:"profile",
+                as:"followers"
+            }
+        },
+        {
+            $addFields:{
+                websCount:{
+                    $size:"$webs"
+                },
+                followersCount:{
+                    $size:"$followers"
+                },
+                isFollowedByme:isFollowedByMe,
+                showcaseWebs:{$slice:["$webs",2]},
+                score:{$meta:"textScore"}
+            }
+        },
+        {
+            $sort:{
+                score:-1,
+                followersCount:-1,
+            }
+        },
+        {
+            $project:{
+                followersCount:1,
+                websCount:1,
+                username:1,
+                fullName:1,
+                avatar:1,
+                showcaseWebs:1,
+                isFollowedByme:1
+            }
+        }
+    ]);
+
+    const users = await User.aggregatePaginate(aggregate,{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    });
+
+    // check if users exists or not
+    if (!users) {
+        throw new ApiError(500,"something went wrong while searching users");
+    }
+
+    // send response
+    return res
+    .status(200)
+    .json(new ApiResponce(200,users,"Users get successfully"));
+})
+
 
 export {
     registerUser,
@@ -923,9 +1072,11 @@ export {
     updateAvatar,
     updateCoverImage,
     getUserProfile,
+    getShowcaseItems,
     getPinedItems,
     addToPinedItems,
     removePinedItem,
     updateShowcase,
-    checkUsernameAvailablity
+    checkUsernameAvailablity,
+    searchUsers
 }
