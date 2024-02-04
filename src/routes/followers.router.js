@@ -10,9 +10,9 @@ import {
 const router = Router();
 router.use(verifyJWT);
 
-router.route("/toggle/:profileId").post(toggleFollow);
-router.route("/get-followers/:profileId").get(getFollowers);
-router.route("/get-followings/:profileId").get(getFollowings);
+router.route("/toggle/:username").post(toggleFollow);
+router.route("/get-followers/:username").get(getFollowers);
+router.route("/get-followings/:username").get(getFollowings);
 
 
 export default router;

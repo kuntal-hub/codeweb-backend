@@ -213,8 +213,8 @@ const getWebByWebId = asyncHandler(async (req, res) => {
 const getAllWebsByUserId = asyncHandler(async (req, res) => {
     // get user_id, webType, sortBy, sortOrder, page, limit from req.query
     const { webType = "public", sortBy="views", sortOrder="desc", page=1, limit=4 } = req.query;
-    // get userId from req.params
-    const { userId } = req.params;
+    // get username from req.params
+    const { username } = req.params;
     // sortBy = views, createdAt, likesCount, commentsCount
     // webType = public, private, forked
     // return array of webs created by usee (userId)
@@ -222,9 +222,15 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
     // userId = the user whose webs are to be fetched
     // user_id = the user who is requesting for webs
     // check userId is provided or not
-    if (!userId) {
-        throw new ApiError(400,"userId is required");
+    if (!username) {
+        throw new ApiError(400,"username is required");
     }
+    // get user by username
+    const user = await User.findOne({username}).select("_id username");
+    // check user is found or not
+    if (!user) throw new ApiError(404,"user not found");
+    // get userId from user
+    const userId = user._id;
     // check webType is valid or not
     let match,isLikedByMe;
     // if webType is private then select only private webs
@@ -347,15 +353,21 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
 
 const getLikedWebs = asyncHandler(async (req, res) => {
     // return array of webs liked by user
-    // get userId from req.params
-    const {userId} = req.params;
-    // get user_id, sortBy, sortOrder, page, limit from req.query
+    // get username from req.params
+    const {username} = req.params;
+    // get sortBy, sortOrder, page, limit from req.query
     const {sortBy="createdAt",sortOrder="desc", page=1, limit=4 } = req.query;
     // sortBy = views, createdAt, likesCount, commentsCount
     // check userId is provided or not
-    if (!userId) {
-        throw new ApiError(400,"userId is required");
+    if (!username) {
+        throw new ApiError(400,"username is required");
     }
+    // get user by username
+    const user = await User.findOne({username}).select("_id username");
+    // check user is found or not
+    if (!user) throw new ApiError(404,"user not found");
+    // get userId from user
+    const userId = user._id;
     // take a variable isLikedByMe
     let isLikedByMe;
     // if req.user provided then set values of isLikedByMe and isFollowedByMe else set false

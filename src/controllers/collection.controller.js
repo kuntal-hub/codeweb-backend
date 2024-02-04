@@ -3,6 +3,7 @@ import {Collection} from "../models/collecntions.model.js"
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponce } from '../utils/ApiResponce.js';
 import { Web } from '../models/webs.model.js';
+import { User } from '../models/users.model.js';
 import mongoose from 'mongoose';
 import { Like } from '../models/likes.model.js';
 
@@ -446,16 +447,19 @@ const getCollectionWEbsByCollectionId = asyncHandler(async(req,res)=>{
 
 const getCollectionsByUserId = asyncHandler(async(req,res)=>{
     // get all collections created by user
-    // get userId from params
-    const {userId} = req.params;
-    // get user_id collectionType,sortBy,sortOrder,page,limit from query
-    const {collectionType="public",sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
     // collectionType = public,private
     // sortBy = views,likesCount,websCount,createdAt
-    // check if userId is present or not
-    if (!userId) {
-        throw new ApiError(400,"userId is required");
-    }
+    // get userId from params
+    const {username} = req.params;
+    // check if username is present or not
+    if (!username) throw new ApiError(400,"username is required");
+    // get user by username
+    const user = await User.findOne({username:username}).select("_id username");
+    // check if user is found or not
+    if (!user) throw new ApiError(404,"User not found");
+    const userId = user._id;
+    // get user_id collectionType,sortBy,sortOrder,page,limit from query
+    const {collectionType="public",sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
     // take isLikedByMe variable
     let isLikedByMe;
     // if req.user provided then set values of isLikedByMe else set false
@@ -629,12 +633,17 @@ const getCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
 
 const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
     // get all collections liked by user
-    const {userId} = req.params;
+    const {username} = req.params;
     const {sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
     // sortBy = views,likesCount,websCount,createdAt
-    if (!userId) {
+    if (!username) {
         throw new ApiError(400,"userId is required");
     }
+    // get user by username
+    const user = await User.findOne({username:username}).select("_id username");
+    // check if user is found or not
+    if (!user) throw new ApiError(404,"User not found");
+    const userId = user._id;
     // take isLikedByMe variable
     let isLikedByMe;
     // if req.user provided then set values of isLikedByMe else set false
@@ -872,9 +881,16 @@ const searchFromAllCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
     const aggregate = Collection.aggregate([
         {
             $match:{
-                $text:{
-                    $search:search
-                }
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(req.user?._id)
+                    },
+                    {
+                        $text:{
+                            $search:search
+                        }
+                    }
+                ]
             }
         },
         {

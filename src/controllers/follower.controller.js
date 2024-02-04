@@ -3,15 +3,22 @@ import { ApiError } from '../utils/ApiError.js';
 import { ApiResponce } from '../utils/ApiResponce.js';
 import mongoose from 'mongoose';
 import {Follower } from "../models/followers.model.js";
+import { User } from '../models/users.model.js';
 
 
 const toggleFollow = asyncHandler(async (req, res) => {
-    // get profileId from params
-    const {profileId} = req.params;
-    // check if profileId is present or not
-    if (!profileId) {
-        throw new ApiError(400, 'profileId id is required');
+    // get username from params
+    const {username} = req.params;
+    // check if username is present or not
+    if (!username) {
+        throw new ApiError(400, 'username id is required');
     }
+    // find profile by username
+    const profile = await User.findOne({username}).select('_id username');
+    // check if profile is present or not
+    if (!profile) throw new ApiError(404, 'Profile not found');
+    // get profileId from profile
+    const profileId = profile._id;
     // check if profile is already followed by user or not
     const isFollowed = await Follower.findOne({
         profile: new mongoose.Types.ObjectId(profileId),
@@ -46,14 +53,20 @@ const toggleFollow = asyncHandler(async (req, res) => {
 });
 
 const getFollowers = asyncHandler(async (req, res) => {
-    // get profileId from params
-    const {profileId} = req.params;
+    // get username from params
+    const {username} = req.params;
     // get page and limit from query
     const {page=1,limit=20} = req.query;
-    // check if profileId is present or not
-    if (!profileId) {
-        throw new ApiError(400, 'profileId id is required');
+    // check if username is present or not
+    if (!username) {
+        throw new ApiError(400, 'username id is required');
     }
+    // find profile by username
+    const profile = await User.findOne({username}).select('_id username');
+    // check if profile is present or not
+    if (!profile) throw new ApiError(404, 'Profile not found');
+    // get profileId from profile
+    const profileId = profile._id;
     // get followers 
     const aggregate = Follower.aggregate([
         {
@@ -151,14 +164,20 @@ const getFollowers = asyncHandler(async (req, res) => {
 });
 
 const getFollowings = asyncHandler(async (req, res) => {
-    // get profileId from params
-    const {profileId} = req.params;
+    // get username from params
+    const {username} = req.params;
     // get page and limit from query
     const {page=1,limit=20} = req.query;
-    // check if profileId is present or not
-    if (!profileId) {
-        throw new ApiError(400, 'profileId id is required');
+    // check if username is present or not
+    if (!username) {
+        throw new ApiError(400, 'username id is required');
     }
+    // find profile by username
+    const profile = await User.findOne({username}).select('_id username');
+    // check if profile is present or not
+    if (!profile) throw new ApiError(404, 'Profile not found');
+    // get profileId from profile
+    const profileId = profile._id;
     // get followings
     const aggregate = Follower.aggregate([
         {
