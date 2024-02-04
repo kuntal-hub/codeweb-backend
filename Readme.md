@@ -477,10 +477,10 @@ function getWebById({webId}) {
 ### get all webs by user id (created by user)
 
 ```js
-function getAllWebByUserId ({userId,queryParameters="page=1&limit=4&webType=public"}) {
+function getAllWebByUsername ({username,queryParameters="page=1&limit=4&webType=public"}) {
     // queryParameters = string contains all querys of url
     // valid querys are  webType , sortBy, sortOrder, page, limit;
-    axios.get(`https://codeweb.onrender.com/api/v1/webs/user/${userId}?${queryParameters}`)
+    axios.get(`https://codeweb.onrender.com/api/v1/webs/user/${username}?${queryParameters}`)
             .then(res => {
             console.log(res.data)
         })
@@ -493,10 +493,10 @@ function getAllWebByUserId ({userId,queryParameters="page=1&limit=4&webType=publ
 ### get all webs by user id (liked by user)
 
 ```js
-function getAllWebByUserId ({userId,queryParameters="page=1&limit=4"}) {
+function getAllWebByUsername ({username,queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are sortBy, sortOrder, page, limit;
-    axios.get(`https://codeweb.onrender.com/api/v1/webs/liked/${userId}?${queryParameters}`)
+    axios.get(`https://codeweb.onrender.com/api/v1/webs/liked/${username}?${queryParameters}`)
             .then(res => {
             console.log(res.data)
         })
@@ -826,10 +826,10 @@ function getCollectionWebsByCollectionId ({collectionId,queryParameters="page=1&
 ### get all collections by user id
 
 ```js
-function getAllCollectionsByUserId ({userId,queryParameters="page=1&limit=4&collectionType=public"}) {
+function getAllCollectionsByUsername ({username,queryParameters="page=1&limit=4&collectionType=public"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit , sortBy, sortOrder, collectionType;
-    axios.get(`https://codeweb.onrender.com/api/v1/collections/user-collection/${userId}?${queryParameters}`)
+    axios.get(`https://codeweb.onrender.com/api/v1/collections/user-collection/${username}?${queryParameters}`)
             .then(res => {
             console.log(res.data)
         })
@@ -861,10 +861,10 @@ function getCollectionsCreatedByUser ({queryParameters="page=1&limit=4"}) {
 ### get liked collections by userId
 
 ```js
-function getLikedCollectionsByUserId ({userId,queryParameters="page=1&limit=4"}) {
+function getLikedCollectionsByUsername ({username,queryParameters="page=1&limit=4"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit , sortBy, sortOrder;
-    axios.get(`https://codeweb.onrender.com/api/v1/collections/liked/${userId}?${queryParameters}`)
+    axios.get(`https://codeweb.onrender.com/api/v1/collections/liked/${username}?${queryParameters}`)
             .then(res => {
             console.log(res.data)
         })
@@ -1280,8 +1280,8 @@ function likeReply ({replayId}) {
 ### toggle follow unfollow user
 
 ```js
-function toggleFollowUnfollowUser ({profileId}) {
-    axios.post(`https://codeweb.onrender.com/api/v1/followers/toggle/${profileId}`)
+function toggleFollowUnfollowUser ({username}) {
+    axios.post(`https://codeweb.onrender.com/api/v1/followers/toggle/${username}`)
             .then(res => {
                 // only possible if you already logged in
             console.log(res.data)
@@ -1296,10 +1296,10 @@ function toggleFollowUnfollowUser ({profileId}) {
 ### get all followers by user id
 
 ```js
-function getAllFollowersByUserId ({profileId,queryParameters="page=1&limit=20"}) {
+function getAllFollowersByUserId ({username,queryParameters="page=1&limit=20"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit;
-    axios.get(`https://codeweb.onrender.com/api/v1/followers/get-followers/${profileId}?${queryParameters}`)
+    axios.get(`https://codeweb.onrender.com/api/v1/followers/get-followers/${username}?${queryParameters}`)
             .then(res => {
             console.log(res.data)
         })
@@ -1313,10 +1313,10 @@ function getAllFollowersByUserId ({profileId,queryParameters="page=1&limit=20"})
 ### get all followings by user id
 
 ```js
-function getAllFollowingsByUserId ({profileId,queryParameters="page=1&limit=20"}) {
+function getAllFollowingsByUserId ({username,queryParameters="page=1&limit=20"}) {
     // queryParameters = string contains all querys of url
     // valid querys are page, limit;
-    axios.get(`https://codeweb.onrender.com/api/v1/followers/get-followings/${profileId}?${queryParameters}`)
+    axios.get(`https://codeweb.onrender.com/api/v1/followers/get-followings/${username}?${queryParameters}`)
             .then(res => {
             console.log(res.data)
         })
