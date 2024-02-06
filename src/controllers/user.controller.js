@@ -137,7 +137,8 @@ const loginUser = asyncHandler(async(req,res)=>{
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: "None",
     }
     // send response
     return res
@@ -164,7 +165,8 @@ const logoutUser = asyncHandler(async(req,res)=>{
 
     const options = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite: "None",
     }
     // send response
     return res
@@ -197,7 +199,10 @@ try {
     // send response
         return res
         .status(200)
-        .cookie("accessToken",accessToken,{httpOnly:true,secure:true})
+        .cookie("accessToken",accessToken,{  
+            httpOnly: true,
+            secure: true,
+            sameSite: "None",})
         .json(new ApiResponce(200,{accessToken},"Access token refreshed successfully"));
 } catch (error) {
     throw new ApiError(403,"Unauthorized request");
