@@ -75,7 +75,7 @@ const registerUser = asyncHandler(async(req,res)=>{
     });
 
     if (!user) {
-        throw new ApiError(400,"Something went wrong while creating user");
+        throw new ApiError(500,"Something went wrong while creating user");
     }
     
     const newUser = {
@@ -110,7 +110,7 @@ const loginUser = asyncHandler(async(req,res)=>{
     const user = await User.findOne({$or:[{username:identifier},{email:identifier}]}).select("-pined"); // find user by username or email
     // check if user exists
     if (!user) {
-        throw new ApiError(400,"user dose not exists");
+        throw new ApiError(404,"user dose not exists");
     }
     // check if password is correct
     const isCorrectPassword = await user.isPasswordMatch(password)
@@ -126,7 +126,7 @@ const loginUser = asyncHandler(async(req,res)=>{
         const savedUser = await user.save({validateBeforeSave:false});
         // check if user saved or not
         if (!savedUser) {
-            throw new ApiError(400,"Something went wrong while updating refresh token");
+            throw new ApiError(500,"Something went wrong while updating refresh token");
         }
     }
     // generate access token
@@ -143,8 +143,8 @@ const loginUser = asyncHandler(async(req,res)=>{
     // send response
     return res
     .status(200)
-    .cookie("refreshToken",refreshToken,options)
-    .cookie("accessToken",accessToken,options)
+    .cookie("refreshToken",refreshToken,{...options,maxAge: (86400000*30)})
+    .cookie("accessToken",accessToken,{...options,maxAge: 43200000})
     .json(new ApiResponce(200,{accessToken,refreshToken,user:logedInUser},"User logged in successfully"));
 })
 
@@ -152,16 +152,17 @@ const logoutUser = asyncHandler(async(req,res)=>{
     // get user from req.user
     const user = req.user;
     // get fromAllDevices from req.query
-    const {fromAllDevices = true} = req.query;
+    const {fromAllDevices = "true"} = req.query;
 
     // check fromAllDevices is true or false
-    if (fromAllDevices) {
+    if (fromAllDevices === "true") {
         // if fromAllDevices is true then remove refreshToken from user
         const Updateduser = await User.findByIdAndUpdate(user?._id,{$unset:{refreshToken:1}},{new:true}).select("username email");
         if (!Updateduser) {
             throw new ApiError(400,"Something went wrong while logging out");
         }
     }
+
 
     const options = {
         httpOnly: true,
@@ -171,8 +172,8 @@ const logoutUser = asyncHandler(async(req,res)=>{
     // send response
     return res
     .status(200)
-    .clearCookie("refreshToken",options)
-    .clearCookie("accessToken",options)
+    .clearCookie("refreshToken",{...options,maxAge: (86400000*30)})
+    .clearCookie("accessToken",{...options,maxAge: 43200000})
     .json(new ApiResponce(200,{},"User logged out successfully"));
 })
 
@@ -202,7 +203,8 @@ try {
         .cookie("accessToken",accessToken,{  
             httpOnly: true,
             secure: true,
-            sameSite: "None",})
+            sameSite: "None",
+            maxAge: 43200000,})
         .json(new ApiResponce(200,{accessToken},"Access token refreshed successfully"));
 } catch (error) {
     throw new ApiError(403,"Unauthorized request");
@@ -271,7 +273,7 @@ try {
         // send response
         return res
         .status(200)
-        .json(new ApiResponce(200,{},"Email verified successfully"));
+        .json(new ApiResponce(200,savedUser,"Email verified successfully"));
 } catch (error) {
     throw new ApiError(403,error.message);
 }

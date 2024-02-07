@@ -1,6 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import errorHandler from "./middlewares/errorHendeler.middleware.js";
 
 const app = express();
 
@@ -27,7 +28,6 @@ import collectionRouter from "./routes/collections.router.js";
 import assetRouter from "./routes/assets.router.js";
 
 // use all routes
-
 app.use("/api/v1/users",userRouter);
 app.use("/api/v1/webs",webRouter);
 app.use("/api/v1/replays",replayRouter);
@@ -37,5 +37,7 @@ app.use("/api/v1/healthCheck",healthCheckRouter);
 app.use("/api/v1/followers",followerRouter);
 app.use("/api/v1/collections",collectionRouter);
 app.use("/api/v1/assets",assetRouter);
+
+app.use(errorHandler);
 
 export default app;

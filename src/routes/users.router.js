@@ -37,7 +37,7 @@ router.route("/change-password").post(verifyJWT,chengePassword);
 router.route("/change-email").post(verifyJWT,chengeEmail);
 router.route("/delete").delete(verifyJWT,deleteUser);
 router.route("/request-verify-email").post(verifyJWT,requestVerifyEmail);
-router.route("/verify-email").post(verifyEmail);
+router.route("/verify-email").post(verifyJWT,verifyEmail);
 router.route("/request-forgot-password-email").post(requestForgotPasswordEmail);
 router.route("/reset-password").post(resetPassword);
 router.route("/update").patch(verifyJWT,Updateduser);
