@@ -155,9 +155,10 @@ const logoutUser = asyncHandler(async(req,res)=>{
     const {fromAllDevices = "true"} = req.query;
 
     // check fromAllDevices is true or false
-    if (fromAllDevices === "true") {
+    if (fromAllDevices == "true") {
         // if fromAllDevices is true then remove refreshToken from user
         const Updateduser = await User.findByIdAndUpdate(user?._id,{$unset:{refreshToken:1}},{new:true}).select("username email");
+        
         if (!Updateduser) {
             throw new ApiError(400,"Something went wrong while logging out");
         }
@@ -359,19 +360,19 @@ const Updateduser = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"user dose not exists");
     }
     // if fullName,bio,link1,link2,link3 exists then update user
-    if (fullName) {
+    if (fullName && fullName.trim()!=="") {
         user.fullName = fullName;
     }
-    if (bio) {
+    if (bio && bio.trim()!=="") {
         user.bio = bio;
     }
-    if (link1) {
+    if (link1 && link1.trim()!=="") {
         user.link1 = link1;
     }
-    if (link2) {
+    if (link2 && link2.trim()!=="") {
         user.link2 = link2;
     }
-    if (link3) {
+    if (link3 && link3.trim()!=="") {
         user.link3 = link3;
     }
     // save user
@@ -386,7 +387,7 @@ const Updateduser = asyncHandler(async(req,res)=>{
     // send response
     return res
     .status(200)
-    .json(new ApiResponce(200,savedUser,"User updated successfully"));
+    .json(new ApiResponce(200,savedUser,"Chenges Saved successfully"));
 })
 
 const chengePassword = asyncHandler(async(req,res)=>{
@@ -479,7 +480,7 @@ const deleteUser = asyncHandler(async(req,res)=>{
     // find user by req.user._id
     const user = await User.findById(req.user?._id).select("-__v -pined -showcase");
     // get password from req.body
-    const {password} = req.body;
+    const {password} = req.params;
     // check if password exists or not
     if (!password) {
         throw new ApiError(400,"Password is required");
