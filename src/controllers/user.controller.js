@@ -532,7 +532,7 @@ const updateAvatar = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"user dose not exists");
     }
     // if user already have avatar then delete it from cloudinary
-    if (!user.avatarPublicId === "vbhdn2mo3facgwbanema") {
+    if (user.avatarPublicId !== "vbhdn2mo3facgwbanema") {
         // delete image from cloudinary
         const deleted = await deleteFromCloudinary(user.avatarPublicId); 
         // check if image deleted or not
@@ -573,7 +573,7 @@ const updateCoverImage = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"user dose not exists");
     }
     // if user already have coverImage then delete it from cloudinary
-    if (!user.coverImagePublicId === "l1bthaxmnngyxabxmhwi") {
+    if (user.coverImagePublicId !== "l1bthaxmnngyxabxmhwi") {
         // delete image from cloudinary
         const deleted = await deleteFromCloudinary(user.coverImagePublicId); 
         // check if image deleted or not
@@ -596,7 +596,7 @@ const updateCoverImage = asyncHandler(async(req,res)=>{
     // send response
     return res
     .status(200)
-    .json(new ApiResponce(200,savedUser,"Avatar updated successfully"));
+    .json(new ApiResponce(200,savedUser,"Cover Image updated successfully"));
 
 })
 

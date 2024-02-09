@@ -25,7 +25,7 @@ const uploadOnCloudinary = async (filePath) => {
 const deleteFromCloudinary = async (public_id) => {
   try {
     // Delete image from cloudinary
-    const responce = await cloudinary.uploader.destroy(public_id,{resource_type:"auto",folder:"/codeweb"})
+    const responce = await cloudinary.uploader.destroy(public_id)
     return responce;
   } catch (error) {
     return null;
