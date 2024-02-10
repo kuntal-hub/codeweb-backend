@@ -13,6 +13,7 @@ import {Collection} from "../models/collecntions.model.js";
 import {Asset} from "../models/assets.model.js";
 import {Replay} from "../models/replays.model.js";
 import {deleteFromCloudinary } from "../utils/cloudinary.js";
+import { Editor } from "../models/editor.model.js";
 
 function validateEmail(email) {
     // Regular expression for a basic email validation
@@ -77,6 +78,8 @@ const registerUser = asyncHandler(async(req,res)=>{
     if (!user) {
         throw new ApiError(500,"Something went wrong while creating user");
     }
+
+    await Editor.create({owner:new mongoose.Types.ObjectId(user._id)});
     
     const newUser = {
         username:user.username,
@@ -497,6 +500,8 @@ const deleteUser = asyncHandler(async(req,res)=>{
     if (!deletedUser) {
         throw new ApiError(400,"Something went wrong while deleting user");
     }
+    // delete user Editor settings
+    await Editor.deleteOne({owner:new mongoose.Types.ObjectId(user._id)});
     // delete user's webs
     await Web.deleteMany({owner:new mongoose.Types.ObjectId(user._id)});
     // delete user's followers and following

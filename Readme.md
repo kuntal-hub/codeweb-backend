@@ -679,6 +679,20 @@ function searchFromAllWebs ({queryParameters="page=1&limit=4"}) {
 }
 ```
 
+### get Editor preferences
+
+```js
+function getEditorPreferences () {
+    axios.get(`https://codeweb.onrender.com/api/v1/webs/editor-preferences`)
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
 ## collection routes
 
 ### create new collection

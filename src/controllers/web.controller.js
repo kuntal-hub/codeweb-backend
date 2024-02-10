@@ -7,6 +7,7 @@ import {Like} from "../models/likes.model.js";
 import {Comment} from "../models/comments.model.js";
 import { User } from '../models/users.model.js';
 import {Follower} from "../models/followers.model.js";
+import {Editor} from "../models/editor.model.js";
 import {uploadOnCloudinary,deleteFromCloudinary} from "../utils/cloudinary.js"
 
 
@@ -1235,6 +1236,46 @@ const searchFromAllWebs = asyncHandler(async (req, res) => {
     .json(new ApiResponce(200,webs,"webs found successfully"));
 })
 
+const getEditorPreferences = asyncHandler(async (req, res) => {
+    if (req.user) {
+        const response = await Editor.findOne({owner:new mongoose.Types.ObjectId(req.user?._id)});
+
+        if (!response) {
+            return res
+            .status(200)
+            .json(new ApiResponce(200,{
+                theme:"vs-dark",
+                indentation:1,
+                fontSize:"15px",
+                fontWeight:"500",
+                formatOnType:true,
+                minimap:false,
+                lineHeight:20,
+                mouseWheelZoom:true,
+                wordWrap:"on"
+            }, "editor preferences get successfully"));
+        }
+
+        return res
+        .status(200)
+        .json(new ApiResponce(200,response, "editor preferences get successfully"));
+    } else {
+        return res
+        .status(200)
+        .json(new ApiResponce(200,{
+            theme:"vs-dark",
+            indentation:1,
+            fontSize:"15px",
+            fontWeight:"500",
+            formatOnType:true,
+            minimap:false,
+            lineHeight:20,
+            mouseWheelZoom:true,
+            wordWrap:"on"
+        }, "editor preferences get successfully"));
+    }
+})
+
 export{
     createWeb,
     createForkedWeb,
@@ -1251,4 +1292,5 @@ export{
     updateWebViewCount,
     searchFromWebsCreatedByMe,
     searchFromAllWebs,
+    getEditorPreferences,
 }
