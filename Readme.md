@@ -693,6 +693,20 @@ function getEditorPreferences () {
 }
 ```
 
+### update Editor preferences
+
+```js
+function updateEditorPreferences (editorPreferences) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/webs/update-editor-preferences`,{...editorPreferences})
+            .then(res => {
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+}
+```
+
 ## collection routes
 
 ### create new collection

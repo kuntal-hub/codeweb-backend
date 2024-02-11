@@ -1276,6 +1276,30 @@ const getEditorPreferences = asyncHandler(async (req, res) => {
     }
 })
 
+const updateEditorPreferences = asyncHandler(async (req, res) => {
+    const {theme,fontSize,fontWeight,formatOnType,lineHeight,mouseWheelZoom,wordWrap} = req.body;
+
+    const response = await Editor.findByIdAndUpdate(req.user?._id,{
+        theme:theme || "vs-dark",
+        fontSize:fontSize || "15px",
+        fontWeight:fontWeight || "500",
+        formatOnType:formatOnType || true,
+        lineHeight:lineHeight || 20,
+        mouseWheelZoom:mouseWheelZoom || true,
+        wordWrap:wordWrap || "on"
+    },{
+        new:true,
+    })
+
+    if (!response) {
+        throw new ApiError(500,"something went wrong while updating editor preferences");
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponce(200,response,"editor preferences updated successfully"));
+});
+
 export{
     createWeb,
     createForkedWeb,
@@ -1293,4 +1317,5 @@ export{
     searchFromWebsCreatedByMe,
     searchFromAllWebs,
     getEditorPreferences,
+    updateEditorPreferences,
 }

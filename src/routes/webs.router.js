@@ -16,7 +16,8 @@ import {
     updateWebViewCount,
     searchFromWebsCreatedByMe,
     searchFromAllWebs,
-    getEditorPreferences
+    getEditorPreferences,
+    updateEditorPreferences,
 } from "../controllers/web.controller.js"
 import {upload} from "../middlewares/multer.middleware.js";
 
@@ -39,6 +40,7 @@ router.route("/toggle-publish-status/:webId").patch(verifyJWT,togglePublishStatu
 router.route("/inc-view/:webId").patch(updateWebViewCount);
 router.route("/search/all-webs").get(checkCurrentUser,searchFromAllWebs);
 router.route("/editor-preferences").get(checkCurrentUser,getEditorPreferences);
+router.route("/update-editor-preferences").patch(verifyJWT,updateEditorPreferences);
 
 
 export default router;

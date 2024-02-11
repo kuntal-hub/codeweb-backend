@@ -12,12 +12,12 @@ const editorSchema = new Schema({
     },
     fontSize:{
         type:String,
-        default:"15px"
+        default:"14px"
     },
     fontWeight:{
         type:String,
         enum:["700","400","500","600"],
-        default:"500",
+        default:"400",
     },
     formatOnType:{
         type:Boolean,
