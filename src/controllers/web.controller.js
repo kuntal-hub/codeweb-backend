@@ -1001,8 +1001,6 @@ const updateWeb = asyncHandler(async (req, res) => {
     const { webId } = req.params;
     // get title, description, html, css, js, image, isPublic from req.body
     const {title,description,html,css,js} = req.body;
-    // get image path from req.file.path
-    const imageLocalPath = req.file?.path;
     // check webId is provided or not
     if (!webId) {
         throw new ApiError(400,"webId is required");
@@ -1011,27 +1009,29 @@ const updateWeb = asyncHandler(async (req, res) => {
     if (!title && !description && !html && !css && !js) {
         throw new ApiError(400,"at least one of title, description, html, css, js is required");  
     }
-    // check image is provided or not
-    if (!imageLocalPath) {
-        throw new ApiError(400,"image not provided");
-    }
     // get web by webId
     const web = await Web.findOne({_id:new mongoose.Types.ObjectId(webId),owner:new mongoose.Types.ObjectId(req.user?._id)});
     // check web is found or not
     if (!web) {
         throw new ApiError(404,"invalid webId or unauthorized");
     }
-    // delete image from cloudinary
-    const deleteImage = await deleteFromCloudinary(web.public_id);
-    // check image is deleted or not
-    if (!deleteImage) {
-        throw new ApiError(500,"something went wrong while deleting image from cloudinary");
-    }
-    // upload image on cloudinary
-    const image = await uploadOnCloudinary(imageLocalPath);
-    // check image is uploaded or not
-    if (!image) {
-        throw new ApiError(500,"something went wrong while uploading image on cloudinary");
+    // check image is provided or not
+    if(req.file){
+        const imageLocalPath = req.file?.path;
+        // delete image from cloudinary
+        const deleteImage = await deleteFromCloudinary(web.public_id);
+        // check image is deleted or not
+        if (!deleteImage) {
+            throw new ApiError(500,"something went wrong while deleting image from cloudinary");
+        }
+        // upload image on cloudinary
+        const image = await uploadOnCloudinary(imageLocalPath);
+        // check image is uploaded or not
+        if (!image) {
+            throw new ApiError(500,"something went wrong while uploading image on cloudinary");
+        }
+        web.image = image.secure_url;
+        web.public_id = image.public_id;
     }
     // update web
     web.title = title || web.title;
@@ -1039,8 +1039,6 @@ const updateWeb = asyncHandler(async (req, res) => {
     web.html = html || web.html;
     web.css = css || web.css;
     web.js = js || web.js;
-    web.image = image.secure_url;
-    web.public_id = image.public_id;
     // save web
     const savedWeb = await web.save({validateBeforeSave:true});
     // check web is saved or not
@@ -1245,7 +1243,7 @@ const getEditorPreferences = asyncHandler(async (req, res) => {
             .status(200)
             .json(new ApiResponce(200,{
                 theme:"vs-dark",
-                indentation:1,
+                indentation:2,
                 fontSize:"15px",
                 fontWeight:"500",
                 formatOnType:true,
@@ -1264,7 +1262,7 @@ const getEditorPreferences = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponce(200,{
             theme:"vs-dark",
-            indentation:1,
+            indentation:2,
             fontSize:"15px",
             fontWeight:"500",
             formatOnType:true,
@@ -1277,11 +1275,12 @@ const getEditorPreferences = asyncHandler(async (req, res) => {
 })
 
 const updateEditorPreferences = asyncHandler(async (req, res) => {
-    const {theme,fontSize,fontWeight,formatOnType,lineHeight,mouseWheelZoom,wordWrap} = req.body;
+    const {theme,fontSize,fontWeight,indentation,formatOnType,lineHeight,mouseWheelZoom,wordWrap} = req.body;
 
     const response = await Editor.findByIdAndUpdate(req.user?._id,{
         theme:theme || "vs-dark",
         fontSize:fontSize || "15px",
+        indentation:indentation || 2,
         fontWeight:fontWeight || "500",
         formatOnType:formatOnType || true,
         lineHeight:lineHeight || 20,

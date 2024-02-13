@@ -8,7 +8,7 @@ const editorSchema = new Schema({
     },
     indentation:{
         type:Number,
-        default:1
+        default:2
     },
     fontSize:{
         type:String,
