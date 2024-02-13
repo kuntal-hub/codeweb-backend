@@ -1275,12 +1275,11 @@ const getEditorPreferences = asyncHandler(async (req, res) => {
 })
 
 const updateEditorPreferences = asyncHandler(async (req, res) => {
-    const {theme,fontSize,fontWeight,indentation,formatOnType,lineHeight,mouseWheelZoom,wordWrap} = req.body;
+    const {theme,fontSize,fontWeight,formatOnType,lineHeight,mouseWheelZoom,wordWrap} = req.body;
 
-    const response = await Editor.findByIdAndUpdate(req.user?._id,{
+    const response = await Editor.findOneAndUpdate({owner:new mongoose.Types.ObjectId(req.user?._id)},{
         theme:theme || "vs-dark",
         fontSize:fontSize || "15px",
-        indentation:indentation || 2,
         fontWeight:fontWeight || "500",
         formatOnType:formatOnType || true,
         lineHeight:lineHeight || 20,
@@ -1298,6 +1297,26 @@ const updateEditorPreferences = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponce(200,response,"editor preferences updated successfully"));
 });
+
+const ChengeEditorView = asyncHandler(async (req, res) => {
+    const {indentation} = req.body;
+
+    if(!indentation){
+        throw new ApiError(400,"indentation is required");
+    }
+
+    const response = await Editor.findOneAndUpdate({owner:new mongoose.Types.ObjectId(req.user?._id)},{indentation},{
+        new:true
+    });
+
+    if (!response) {
+        throw new ApiError(500,"something went wrong while updating editor preferences");
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponce(200,response,"editor view updated successfully"));
+})
 
 export{
     createWeb,
@@ -1317,4 +1336,5 @@ export{
     searchFromAllWebs,
     getEditorPreferences,
     updateEditorPreferences,
+    ChengeEditorView,
 }

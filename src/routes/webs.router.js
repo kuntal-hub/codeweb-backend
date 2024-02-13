@@ -18,6 +18,7 @@ import {
     searchFromAllWebs,
     getEditorPreferences,
     updateEditorPreferences,
+    ChengeEditorView
 } from "../controllers/web.controller.js"
 import {upload} from "../middlewares/multer.middleware.js";
 
@@ -41,6 +42,7 @@ router.route("/inc-view/:webId").patch(updateWebViewCount);
 router.route("/search/all-webs").get(checkCurrentUser,searchFromAllWebs);
 router.route("/editor-preferences").get(checkCurrentUser,getEditorPreferences);
 router.route("/update-editor-preferences").patch(verifyJWT,updateEditorPreferences);
+router.route("/chenge-editor-view").patch(verifyJWT,ChengeEditorView);
 
 
 export default router;
