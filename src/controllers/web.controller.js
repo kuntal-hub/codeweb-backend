@@ -67,6 +67,10 @@ const createForkedWeb = asyncHandler(async (req, res) => {
     if (!web) {
         throw new ApiError(404,"web not found, invalid webId");
     }
+    // check web Owner is same as req.user or not
+    if (web.owner.toString()===req.user?._id.toString()) {
+        throw new ApiError(400,"you can not fork your own web");
+    }
     // create forked web
     const forkedWeb = await Web.create({
         title:web.title,
@@ -87,7 +91,7 @@ const createForkedWeb = asyncHandler(async (req, res) => {
     // send response
     return res
     .status(201)
-    .json(new ApiResponce(201,forkedWeb,"web created successfully"));
+    .json(new ApiResponce(201,forkedWeb,"web Forked successfully"));
 
 });
 
