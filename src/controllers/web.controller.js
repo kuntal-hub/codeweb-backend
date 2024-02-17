@@ -1040,9 +1040,9 @@ const updateWeb = asyncHandler(async (req, res) => {
     // update web
     web.title = title || web.title;
     web.description = description || web.description;
-    web.html = html || web.html;
-    web.css = css || web.css;
-    web.js = js || web.js;
+    web.html = html
+    web.css = css
+    web.js = js
     // save web
     const savedWeb = await web.save({validateBeforeSave:true});
     // check web is saved or not

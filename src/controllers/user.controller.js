@@ -47,9 +47,9 @@ function generateUserVerificationToken({email,fullName,_id}) {
 
 const registerUser = asyncHandler(async(req,res)=>{
     // get username,email,password,fullName from req.body
-    const {username,email,password,fullName,verificationURL=""} = req.body;
+    const {username,email,password,fullName,verificationURL} = req.body;
     // check if username,email,password,fullName exists or not
-    if(!username || !email || !password || !fullName){
+    if(!username || !email || !password || !fullName || !verificationURL){
         throw new ApiError(400,"All fields are required");
     }
     // check if password is atleast 8 characters long or not
@@ -227,7 +227,11 @@ const requestVerifyEmail = asyncHandler(async(req,res)=>{
     // get _id from req.user and find user by _id
     const user = await User.findById(req.user?._id).select("-password -refreshToken -__v -pined -showcase");
     // get verificationURL from req.body
-    const {verificationURL=""} = req.body;
+    const {verificationURL} = req.body;
+    // check verificationURL is Provided or not
+    if (!verificationURL) {
+        throw new ApiError(400,"verificationURL is requird")
+    }
     // check if user exists or not
     if (!user) {
         throw new ApiError(400,"User dose not exists");
@@ -285,10 +289,14 @@ try {
 
 const requestForgotPasswordEmail = asyncHandler(async(req,res)=>{
     // get email from req.body
-    const {email,resetPasswordURL=""} = req.body;
+    const {email,resetPasswordURL} = req.body;
     // check if email exists or not
     if (!email) {
         throw new ApiError(400,"Email is required");
+    }
+    // check resetPasswordURL is provided or not
+    if (!resetPasswordURL) {
+        throw new ApiError(400,"resetPasswordURL is required")
     }
     // validate email
     if (!validateEmail(email)) throw new ApiError(400,"Invalid email address");
