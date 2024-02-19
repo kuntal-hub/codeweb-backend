@@ -1010,8 +1010,12 @@ const updateWeb = asyncHandler(async (req, res) => {
         throw new ApiError(400,"webId is required");
     }
     // check webId, title, description, html, css, js, image, isPublic are provided or not
-    if (!title && !description && !html && !css && !js) {
+    if (!title && !description && html===undefined && css===undefined && js===undefined) {
         throw new ApiError(400,"at least one of title, description, html, css, js is required");  
+    }
+    // check webId, title, description, html, css, js, image, isPublic are provided or not
+    if (html==="" && css==="" && js==="") {
+        throw new ApiError(400,"can not update all of html, css, js to empty string");  
     }
     // get web by webId
     const web = await Web.findOne({_id:new mongoose.Types.ObjectId(webId),owner:new mongoose.Types.ObjectId(req.user?._id)});
@@ -1040,9 +1044,9 @@ const updateWeb = asyncHandler(async (req, res) => {
     // update web
     web.title = title || web.title;
     web.description = description || web.description;
-    web.html = html
-    web.css = css
-    web.js = js
+    web.html = html !== undefined ? html : web.html;
+    web.css = css !== undefined ? css : web.css;
+    web.js = js !== undefined ? js : web.js;
     // save web
     const savedWeb = await web.save({validateBeforeSave:true});
     // check web is saved or not
