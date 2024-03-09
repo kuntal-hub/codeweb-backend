@@ -95,6 +95,25 @@ const createForkedWeb = asyncHandler(async (req, res) => {
 
 });
 
+const getWebWithoutDteailsById = asyncHandler(async (req,res)=>{
+    // get webId from req.params
+    const {webId} = req.params;
+    // check webId is provided or not and is valid or not
+    if (!webId || !mongoose.isValidObjectId(webId)) {
+        throw new ApiError(400,"A Valid webId is required");
+    }
+    // get web by webId
+    const web = await Web.findById(webId).select("html css js title");
+    // check web is found or not
+    if (!web) {
+        throw new ApiError(404,"web not found");
+    }
+    // send response
+    return res
+    .status(200)
+    .json(new ApiResponce(200,web,"web found successfully"));
+})
+
 const getWebByWebId = asyncHandler(async (req, res) => {
     // get webId from req.params
     const { webId } = req.params;
@@ -1345,4 +1364,5 @@ export{
     getEditorPreferences,
     updateEditorPreferences,
     ChengeEditorView,
+    getWebWithoutDteailsById,
 }

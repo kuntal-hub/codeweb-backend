@@ -18,7 +18,8 @@ import {
     searchFromAllWebs,
     getEditorPreferences,
     updateEditorPreferences,
-    ChengeEditorView
+    ChengeEditorView,
+    getWebWithoutDteailsById,
 } from "../controllers/web.controller.js"
 import {upload} from "../middlewares/multer.middleware.js";
 
@@ -28,6 +29,7 @@ const router = Router();
 router.route("/create").post(verifyJWT,upload.single("image"),createWeb);
 router.route("/create-forked/:webId").post(verifyJWT,createForkedWeb);
 router.route("/get/:webId").get(checkCurrentUser,getWebByWebId);
+router.route("/get-without-details/:webId").get(getWebWithoutDteailsById);
 router.route("/user/:username").get(checkCurrentUser,getAllWebsByUserId);
 router.route("/liked/:username").get(checkCurrentUser,getLikedWebs);
 router.route("/following").get(verifyJWT,getFollowingWebs);
