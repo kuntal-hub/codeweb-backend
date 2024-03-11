@@ -20,6 +20,10 @@ import {
     updateEditorPreferences,
     ChengeEditorView,
     getWebWithoutDteailsById,
+    addNewCssLink,
+    addNewJsLink,
+    removeCssLink,
+    removeJsLink,
 } from "../controllers/web.controller.js"
 import {upload} from "../middlewares/multer.middleware.js";
 
@@ -40,6 +44,10 @@ router.route("/recomended-people").get(verifyJWT,RecomendedpeopleToFollow);
 router.route("/update/:webId").patch(verifyJWT,upload.single("image"),updateWeb);
 router.route("/delete/:webId").delete(verifyJWT,deleteWeb);
 router.route("/toggle-publish-status/:webId").patch(verifyJWT,togglePublishStatus);
+router.route("/add-css-link/:webId").patch(verifyJWT,addNewCssLink);
+router.route("/remove-css-link/:webId").patch(verifyJWT,removeCssLink);
+router.route("/add-js-link/:webId").patch(verifyJWT,addNewJsLink);
+router.route("/remove-js-link/:webId").patch(verifyJWT,removeJsLink);
 router.route("/inc-view/:webId").patch(updateWebViewCount);
 router.route("/search/all-webs").get(checkCurrentUser,searchFromAllWebs);
 router.route("/editor-preferences").get(checkCurrentUser,getEditorPreferences);

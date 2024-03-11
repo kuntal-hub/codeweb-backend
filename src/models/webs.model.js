@@ -45,7 +45,13 @@ const webSchema = new Schema({
     forkedFrom:{
         type:Schema.Types.ObjectId,
         ref:"Web"
-    }
+    },
+    cssLinks:[{
+        type:String
+    }],
+    jsLinks:[{
+        type:String
+    }],
 },{timestamps:true})
 
 webSchema.plugin(mongooseAggregatePaginate);

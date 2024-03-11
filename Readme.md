@@ -420,7 +420,7 @@ function searchUsers({search,page=1,limit=6}) {
 ### create new web
 
 ```js
-function createWeb({title,description,html="",css="",js="",isPublic,image}) {
+function createWeb({title,description,html="",css="",js="",isPublic,image,cssLinks=[],jsLinks=[]}) {
     const formData = new FormData();
       formData.append('image', image, 'my-image-name.jpeg');
       formData.append('title', title);
@@ -429,6 +429,8 @@ function createWeb({title,description,html="",css="",js="",isPublic,image}) {
         formData.append('css', css);
         formData.append('js', js);
         formData.append('isPublic', isPublic);
+        formData.append('cssLinks', JSON.stringify(cssLinks));
+        formData.append('jsLinks', JSON.stringify(jsLinks));
     axios.post("https://codeweb.onrender.com/api/v1/webs/create",formData,{
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -623,6 +625,70 @@ function updateWeb ({webId,title,description,html,css,js,image}) {
 ```js
 function deleteWeb ({webId}) {
     axios.delete(`https://codeweb.onrender.com/api/v1/webs/delete/${webId}`)
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### Add new css Link
+
+```js
+function addNewCssLink ({webId,cssLink}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/webs/add-css-link/${webId}`,{cssLink})
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### remove a given css Link
+
+```js
+function removeCssLink ({webId,cssLink}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/webs/remove-css-link/${webId}`,{cssLink})
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### Add new js Link
+
+```js
+function addNewJsLink ({webId,jsLink}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/webs/add-js-link/${webId}`,{jsLink})
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### remove a given js Link
+
+```js
+function removeJsLink ({webId,jsLink}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/webs/remove-js-link/${webId}`,{jsLink})
             .then(res => {
             // only possible if you already logged in
             console.log(res.data)
