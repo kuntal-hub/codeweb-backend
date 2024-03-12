@@ -40,7 +40,7 @@ const createWeb = asyncHandler(async (req, res) => {
         image:image.secure_url,
         public_id:image.public_id,
         owner:new mongoose.Types.ObjectId(req.user?._id),
-        isPublic:isPublic,
+        isPublic:isPublic === "true" ? true : false,
         cssLinks:JSON.parse(cssLinks) || [],
         jsLinks:JSON.parse(jsLinks) || []
     });
@@ -59,6 +59,8 @@ const createWeb = asyncHandler(async (req, res) => {
 const createForkedWeb = asyncHandler(async (req, res) => {
     // get webId from req.params
     const {webId} = req.params;
+    // get title, description, isPublic from req.body
+    const {title,description,isPublic} = req.body;
     // check webId is provided or not
     if (!webId) {
         throw new ApiError(400,"webId is required");
@@ -75,15 +77,15 @@ const createForkedWeb = asyncHandler(async (req, res) => {
     }
     // create forked web
     const forkedWeb = await Web.create({
-        title:web.title,
-        description:web.description,
+        title: title? title : web.title,
+        description:description ? description : web.description,
         html:web.html,
         css:web.css,
         js:web.js,
         image:web.image,
         public_id:web.public_id,
         owner:new mongoose.Types.ObjectId(req.user?._id),
-        isPublic:true,
+        isPublic: isPublic? isPublic === "true"? true : false :true,
         forkedFrom:new mongoose.Types.ObjectId(webId),
         cssLinks:web.cssLinks,
         jsLinks:web.jsLinks
@@ -1027,14 +1029,14 @@ const updateWeb = asyncHandler(async (req, res) => {
     // get webId from req.params
     const { webId } = req.params;
     // get title, description, html, css, js, image, isPublic from req.body
-    const {title,description,html,css,js} = req.body;
+    const {title,description,html,css,js,isPublic} = req.body;
     // check webId is provided or not
     if (!webId) {
         throw new ApiError(400,"webId is required");
     }
     // check webId, title, description, html, css, js, image, isPublic are provided or not
-    if (!title && !description && html===undefined && css===undefined && js===undefined) {
-        throw new ApiError(400,"at least one of title, description, html, css, js is required");  
+    if (!title && !description && !isPublic && html===undefined && css===undefined && js===undefined) {
+        throw new ApiError(400,"at least one of title, description, webType, html, css, js is required");  
     }
     // check webId, title, description, html, css, js, image, isPublic are provided or not
     if (html==="" && css==="" && js==="") {
@@ -1070,6 +1072,7 @@ const updateWeb = asyncHandler(async (req, res) => {
     web.html = html !== undefined ? html : web.html;
     web.css = css !== undefined ? css : web.css;
     web.js = js !== undefined ? js : web.js;
+    web.isPublic = isPublic? isPublic === "true" ? true : false : web.isPublic;
     // save web
     const savedWeb = await web.save({validateBeforeSave:true});
     // check web is saved or not
