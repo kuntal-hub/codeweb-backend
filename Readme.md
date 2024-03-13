@@ -449,8 +449,8 @@ function createWeb({title,description,html="",css="",js="",isPublic,image,cssLin
 ### fork someone's web
 
 ```js
-function forkWeb({webId}) {
-    axios.post(`https://codeweb.onrender.com/api/v1/webs/create-forked/${webId}`)
+function forkWeb({webId,title,description,isPublic}) {
+    axios.post(`https://codeweb.onrender.com/api/v1/webs/create-forked/${webId}`,{title,description,isPublic})
         .then(res => {
             // only possible if you already logged in
             console.log(res.data)
@@ -689,6 +689,38 @@ function addNewJsLink ({webId,jsLink}) {
 ```js
 function removeJsLink ({webId,jsLink}) {
     axios.patch(`https://codeweb.onrender.com/api/v1/webs/remove-js-link/${webId}`,{jsLink})
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### Add new HTML tag
+
+```js
+function addNewTag ({webId,htmlLink}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/webs/add-html-link/${webId}`,{htmlLink})
+            .then(res => {
+            // only possible if you already logged in
+            console.log(res.data)
+        })
+        .catch(err => {
+            console.log(err.message)
+        })
+
+}
+```
+
+### remove a given HTML tag
+
+```js
+function removeTag ({webId,htmlLink}) {
+    axios.patch(`https://codeweb.onrender.com/api/v1/webs/remove-html-link/${webId}`,{htmlLink})
             .then(res => {
             // only possible if you already logged in
             console.log(res.data)

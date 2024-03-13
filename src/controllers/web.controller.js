@@ -13,7 +13,7 @@ import {uploadOnCloudinary,deleteFromCloudinary} from "../utils/cloudinary.js"
 
 const createWeb = asyncHandler(async (req, res) => {
     // get title, description, html, css, js, image, isPublic from req.body
-    const {title,description,html,css,js,isPublic=true,cssLinks,jsLinks} = req.body;
+    const {title,description,html,css,js,isPublic=true,cssLinks,jsLinks,htmlLinks} = req.body;
     // check title, description, html, css, js, image, isPublic are provided or not
     if (!title || !description || !(html || css || js)) {
         throw new ApiError(400,"title, description and html/css/js are required");
@@ -42,7 +42,8 @@ const createWeb = asyncHandler(async (req, res) => {
         owner:new mongoose.Types.ObjectId(req.user?._id),
         isPublic:isPublic === "true" ? true : false,
         cssLinks:JSON.parse(cssLinks) || [],
-        jsLinks:JSON.parse(jsLinks) || []
+        jsLinks:JSON.parse(jsLinks) || [],
+        htmlLinks:JSON.parse(htmlLinks) || [],
     });
     // check web is created or not
     if (!web) {
@@ -88,7 +89,8 @@ const createForkedWeb = asyncHandler(async (req, res) => {
         isPublic: isPublic? isPublic === "true"? true : false :true,
         forkedFrom:new mongoose.Types.ObjectId(webId),
         cssLinks:web.cssLinks,
-        jsLinks:web.jsLinks
+        jsLinks:web.jsLinks,
+        htmlLinks:web.htmlLinks,
     });
     // check forked web is created or not
     if (!forkedWeb) {
@@ -109,7 +111,7 @@ const getWebWithoutDteailsById = asyncHandler(async (req,res)=>{
         throw new ApiError(400,"A Valid webId is required");
     }
     // get web by webId
-    const web = await Web.findById(webId).select("html css js title cssLinks jsLinks");
+    const web = await Web.findById(webId).select("html css js title cssLinks jsLinks htmlLinks");
     // check web is found or not
     if (!web) {
         throw new ApiError(404,"web not found");
@@ -1168,6 +1170,54 @@ const removeCssLink = asyncHandler(async (req,res)=>{
 
 })
 
+const addNewHtmlLink = asyncHandler(async (req,res)=>{
+    const {webId} = req.params;
+    const {htmlLink} = req.body;
+
+    if (!webId || !htmlLink) {
+        throw new ApiError(400,"webId and htmlLink is required");
+    }
+
+    const web = await Web.findOneAndUpdate({_id:new mongoose.Types.ObjectId(webId),owner:new mongoose.Types.ObjectId(req.user?._id)},{
+        $addToSet:{
+            htmlLinks:htmlLink
+        }
+    },{new:true});
+
+    if (!web) {
+        throw new ApiError(404,"Web Not Found");
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponce(200,{},"Link Added Successfully!"))
+
+})
+
+const removeHtmlLink = asyncHandler(async (req,res)=>{
+    const {webId} = req.params;
+    const {htmlLink} = req.body;
+
+    if (!webId || !htmlLink) {
+        throw new ApiError(400,"webId and htmlLink is required");
+    }
+
+    const web = await Web.findOneAndUpdate({_id:new mongoose.Types.ObjectId(webId),owner:new mongoose.Types.ObjectId(req.user?._id)},{
+        $pull:{
+            htmlLinks:htmlLink
+        }
+    },{new:true});
+
+    if (!web) {
+        throw new ApiError(404,"Web Not Found");
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponce(200,{},"Link removed Successfully!"))
+
+})
+
 const addNewJsLink = asyncHandler(async (req,res)=>{
     const {webId} = req.params;
     const {jsLink} = req.body;
@@ -1472,4 +1522,6 @@ export{
     addNewJsLink,
     removeCssLink,
     removeJsLink,
+    addNewHtmlLink,
+    removeHtmlLink,
 }

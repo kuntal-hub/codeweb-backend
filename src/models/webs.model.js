@@ -52,6 +52,9 @@ const webSchema = new Schema({
     jsLinks:[{
         type:String
     }],
+    htmlLinks:[{
+        type:String
+    }],
 },{timestamps:true})
 
 webSchema.plugin(mongooseAggregatePaginate);

@@ -24,6 +24,8 @@ import {
     addNewJsLink,
     removeCssLink,
     removeJsLink,
+    addNewHtmlLink,
+    removeHtmlLink,
 } from "../controllers/web.controller.js"
 import {upload} from "../middlewares/multer.middleware.js";
 
@@ -48,6 +50,8 @@ router.route("/add-css-link/:webId").patch(verifyJWT,addNewCssLink);
 router.route("/remove-css-link/:webId").patch(verifyJWT,removeCssLink);
 router.route("/add-js-link/:webId").patch(verifyJWT,addNewJsLink);
 router.route("/remove-js-link/:webId").patch(verifyJWT,removeJsLink);
+router.route("/add-html-link/:webId").patch(verifyJWT,addNewHtmlLink);
+router.route("/remove-html-link/:webId").patch(verifyJWT,removeHtmlLink);
 router.route("/inc-view/:webId").patch(updateWebViewCount);
 router.route("/search/all-webs").get(checkCurrentUser,searchFromAllWebs);
 router.route("/editor-preferences").get(checkCurrentUser,getEditorPreferences);
