@@ -45,6 +45,23 @@ const getAllAssetsCreatedByUser = asyncHandler(async(req,res)=>{
         },
         {
             $lookup:{
+                from:"users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"owner",
+                pipeline:[
+                    {
+                        $project:{
+                            username:1,
+                            fullName:1,
+                            avatar:1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $lookup:{
                 from:"likes",
                 localField:"_id",
                 foreignField:"asset",
@@ -62,7 +79,8 @@ const getAllAssetsCreatedByUser = asyncHandler(async(req,res)=>{
                         then:true,
                         else:false
                     }
-                }
+                },
+                owner:{$first:"$owner"}
             }
         },
         {
@@ -77,7 +95,7 @@ const getAllAssetsCreatedByUser = asyncHandler(async(req,res)=>{
         }
     ]);
 
-    const assets = Asset.aggregatePaginate(aggregate,{
+    const assets = await Asset.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
@@ -104,6 +122,23 @@ const getAllPublicAssets = asyncHandler(async(req,res)=>{
         },
         {
             $lookup:{
+                from:"users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"owner",
+                pipeline:[
+                    {
+                        $project:{
+                            username:1,
+                            fullName:1,
+                            avatar:1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $lookup:{
                 from:"likes",
                 localField:"_id",
                 foreignField:"asset",
@@ -121,7 +156,8 @@ const getAllPublicAssets = asyncHandler(async(req,res)=>{
                         then:true,
                         else:false
                     }
-                }
+                },
+                owner:{$first:"$owner"}
             }
         },
         {
@@ -136,7 +172,7 @@ const getAllPublicAssets = asyncHandler(async(req,res)=>{
         }
     ])
 
-    const assets = Asset.aggregatePaginate(aggregate,{
+    const assets = await Asset.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
@@ -178,6 +214,23 @@ const searchFromPublicAssets = asyncHandler(async(req,res)=>{
         },
         {
             $lookup:{
+                from:"users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"owner",
+                pipeline:[
+                    {
+                        $project:{
+                            username:1,
+                            fullName:1,
+                            avatar:1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $lookup:{
                 from:"likes",
                 localField:"_id",
                 foreignField:"asset",
@@ -196,7 +249,8 @@ const searchFromPublicAssets = asyncHandler(async(req,res)=>{
                         else:false
                     }
                 },
-                score:{$meta:"textScore"}
+                score:{$meta:"textScore"},
+                owner:{$first:"$owner"}
             }
         },
         {
@@ -212,7 +266,7 @@ const searchFromPublicAssets = asyncHandler(async(req,res)=>{
         }
     ]);
 
-    const assets = Asset.aggregatePaginate(aggregate,{
+    const assets = await Asset.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
@@ -471,7 +525,7 @@ const getLikedAssets = asyncHandler(async(req,res)=>{
         }
     ]);
 
-    const assets = Like.aggregatePaginate(aggregate,{
+    const assets = await Like.aggregatePaginate(aggregate,{
         page:parseInt(page),
         limit:parseInt(limit)
     });
