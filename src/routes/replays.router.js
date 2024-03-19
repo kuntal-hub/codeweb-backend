@@ -3,7 +3,8 @@ import {verifyJWT} from "../middlewares/auth.middleware.js";
 import {
     createReplay,
     updateReplay,
-    deleteReplay
+    deleteReplay,
+    getAllreply,
 } from "../controllers/replay.controller.js"
 
 
@@ -13,5 +14,6 @@ router.use(verifyJWT);
 router.route("/create").post(createReplay);
 router.route("/update/:replayId").patch(updateReplay);
 router.route("/delete/:replayId").delete(deleteReplay);
+router.route("/:commentId").get(getAllreply);
 
 export default router;

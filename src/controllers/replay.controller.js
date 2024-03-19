@@ -73,9 +73,95 @@ const deleteReplay = asyncHandler(async (req, res) => {
         .json(new ApiResponce(200,{}, 'Replay deleted successfully'));
 });
 
+const getAllreply = asyncHandler(async (req, res) => {
+    const {commentId} = req.params;
+
+    if (!commentId) {
+        throw new ApiError(400, 'Comment id is required');
+    }
+
+    const {page=1, limit=10} = req.query;
+
+    const aggregate = Replay.aggregate([
+        {
+            $match:{
+                comment:new mongoose.Types.ObjectId(commentId)
+            }
+        },
+        {
+            $lookup:{
+                from:"users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"owner",
+                pipeline:[
+                    {
+                        $project:{
+                            username:1,
+                            fullName:1,
+                            avatar:1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $lookup:{
+                from:"likes",
+                localField:"_id",
+                foreignField:"replay",
+                as:"likes"
+            }
+        },
+        {
+            $addFields:{
+                owner:{
+                    $first:"$owner"
+                },
+                likesCount:{
+                    $size:"$likes"
+                },
+                isLikedByMe:{
+                    $cond:{
+                        if:{
+                            $in:[new mongoose.Types.ObjectId(req.user?._id),"$likes.likedBy"]
+                        },
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },
+        {
+            $project:{
+                likes:0
+            }
+        },
+        {
+            $sort:{
+                createdAt:-1
+            }
+        }
+    ]);
+
+    const replays = await Replay.aggregatePaginate(aggregate,{
+        page:parseInt(page),
+        limit:parseInt(limit)
+    });
+
+    if (!replays) {
+        throw new ApiError(500, 'Something went wrong while getting replays');
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponce(200,replays, 'Replays fetched successfully'));
+});
+
 
 export {
     createReplay,
     updateReplay,
-    deleteReplay
+    deleteReplay,
+    getAllreply,
 }

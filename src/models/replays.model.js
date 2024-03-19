@@ -1,4 +1,5 @@
 import mongoose,{Schema} from "mongoose";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 const replaySchema = new Schema({
     text:{
@@ -15,5 +16,7 @@ const replaySchema = new Schema({
         ref:"User"
     },
 },{timestamps:true});
+
+replaySchema.plugin(mongooseAggregatePaginate);
 
 export const Replay = mongoose.model("Replay",replaySchema);
