@@ -422,27 +422,23 @@ const updateAssetById = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Please provide assetId");
     }
     // get asset by assetId
-    const asset = await Asset.findOne({
+    const asset = await Asset.findOneAndUpdate({
         _id:new mongoose.Types.ObjectId(assetId),
         owner:new mongoose.Types.ObjectId(req.user?._id)
-    });
+    },{
+        $set:{
+            title:title,
+            isPublic:isPublic
+        }
+    },{new:true})
     // check if asset is present or not
     if (!asset) {
         throw new ApiError(400,"asset not found invalid assetId or you are not the owner of the asset");
     }
-    // update asset
-    asset.title = title? title : asset.title;
-    asset.isPublic = isPublic;
-    // save asset
-    const savedAsset = await asset.save({validateBeforeSave:false});
-    // check if asset is saved or not
-    if (!savedAsset) {
-        throw new ApiError(500,"Something went wrong while updating the asset");
-    }
     // return response
     return res
         .status(200)
-        .json(new ApiResponce(200,savedAsset,"Asset updated successfully"));
+        .json(new ApiResponce(200,asset,"Asset updated successfully"));
 })
 
 const getLikedAssets = asyncHandler(async(req,res)=>{
