@@ -123,7 +123,7 @@ const addWebToCollection = asyncHandler(async(req,res)=>{
     // return response
     return res
     .status(200)
-    .json(new ApiResponce(200,collection,"Web added to collection successfully"))
+    .json(new ApiResponce(200,{},"Web added to collection successfully"))
 })
 
 const removeWebFromCollection = asyncHandler(async(req,res)=>{
@@ -153,7 +153,7 @@ const removeWebFromCollection = asyncHandler(async(req,res)=>{
     // return response
     return res
     .status(200)
-    .json(new ApiResponce(200,collection,"Web removed from collection successfully"))
+    .json(new ApiResponce(200,{},"Web removed from collection successfully"))
 })
 
 const toggleCollectionPublishStatus = asyncHandler(async(req,res)=>{
@@ -183,7 +183,7 @@ const toggleCollectionPublishStatus = asyncHandler(async(req,res)=>{
     // return response
     return res
     .status(200)
-    .json(new ApiResponce(200,savedCollection,"Collection publish status updated successfully"))
+    .json(new ApiResponce(200,{},"Collection publish status updated successfully"))
 });
 
 const updateViewCount = asyncHandler(async(req,res)=>{
@@ -582,7 +582,7 @@ const getCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
             }
         },
         {
-            Lookup:{
+            $lookup:{
                 from:"likes",
                 localField:"_id",
                 foreignField:"collection",

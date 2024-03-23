@@ -852,7 +852,13 @@ const getPinedItems = asyncHandler(async(req,res)=>{
                     {
                         $project:{
                             likes:0,
-                            comments:0
+                            comments:0,
+                            html:0, 
+                            css:0, 
+                            js:0, 
+                            cssLinks:0, 
+                            jsLinks:0, 
+                            htmlLinks:0
                         }
                     }
                 ]

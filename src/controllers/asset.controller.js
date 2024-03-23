@@ -4,6 +4,7 @@ import { ApiResponce } from '../utils/ApiResponce.js';
 import mongoose from 'mongoose';
 import {Asset} from "../models/assets.model.js";
 import { Like } from '../models/likes.model.js';
+import {deleteFromCloudinary } from "../utils/cloudinary.js"
 
 const createAsset = asyncHandler(async(req,res)=>{
     // get title,assetType,assetURL,assetPublicId,isPublic from body
@@ -392,6 +393,20 @@ const deleteAssetById = asyncHandler(async(req,res)=>{
     if (!assetId) {
         throw new ApiError(400,"Please provide assetId");
     }
+    const asset = await Asset.findOne({
+        _id:new mongoose.Types.ObjectId(assetId),
+        owner:new mongoose.Types.ObjectId(req.user?._id)
+    });
+    // check if asset is found or not
+    if (!asset) {
+        throw new ApiError(400,"asset not found invalid assetId or you are not the owner of the asset");
+    }   
+    // delete asset from cloudinary
+    const deleteAsset = await deleteFromCloudinary(asset.assetPublicId);
+    // check if asset is deleted or not
+    if (!deleteAsset) {
+        throw new ApiError(500,"Something went wrong while deleting the asset");
+    }
     // delete asset by assetId
     const deletedAsset = await Asset.findOneAndDelete({
         _id:new mongoose.Types.ObjectId(assetId),
@@ -399,8 +414,8 @@ const deleteAssetById = asyncHandler(async(req,res)=>{
     });
     // check if asset is deleted or not
     if (!deletedAsset) {
-        throw new ApiError(400,"asset not found invalid assetId or you are not the owner of the asset");
-    }   
+        throw new ApiError(500,"Something went wrong while deleting the asset");
+    }
     // delete all likes of the asset
     await Like.deleteMany({
         asset:new mongoose.Types.ObjectId(assetId)

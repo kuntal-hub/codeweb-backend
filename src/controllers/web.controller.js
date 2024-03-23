@@ -553,10 +553,34 @@ const getFollowingWebs = asyncHandler(async (req, res) => {
                             as:"owner",
                             pipeline:[
                                 {
+                                    $lookup:{
+                                        from:"followers",
+                                        localField:"_id",
+                                        foreignField:"profile",
+                                        as:"followers"
+                                    }
+                                },
+                                {
+                                    $addFields:{
+                                        followersCount:{$size:"$followers"},
+                                        isFollowedByMe:{
+                                            $cond:{
+                                                if:{
+                                                    $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
+                                                },
+                                                then:true,
+                                                else:false
+                                            }
+                                        },
+                                    }
+                                },
+                                {
                                     $project:{
                                         username:1,
                                         fullName:1,
                                         avatar:1,
+                                        followersCount:1,
+                                        isFollowedByMe:1
                                     }
                                 }
                             ]
@@ -602,6 +626,12 @@ const getFollowingWebs = asyncHandler(async (req, res) => {
                         $project:{
                             likes:0,
                             comments:0,
+                            html:0, 
+                            css:0, 
+                            js:0, 
+                            cssLinks:0, 
+                            jsLinks:0, 
+                            htmlLinks:0
                         }
                     }
                 ]
@@ -651,7 +681,7 @@ const getTrendingWebs = asyncHandler(async (req, res) => {
     // return array of webs first sort by impressions(views+likes+comments) then by date
     const { page=1, limit=4 } = req.query;
     // take a variable isLikedByMe
-    let isLikedByMe;
+    let isLikedByMe,isFollowedByMe;
     // if req.user provided then set values of isLikedByMe and isFollowedByMe else set false
     if (req.user) {
         isLikedByMe = {
@@ -663,8 +693,18 @@ const getTrendingWebs = asyncHandler(async (req, res) => {
                 else:false
             }
         };
+        isFollowedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
     } else {
         isLikedByMe = false;
+        isFollowedByMe = false;
     }
 
     const aggregate = Web.aggregate([
@@ -681,10 +721,26 @@ const getTrendingWebs = asyncHandler(async (req, res) => {
                 as:"owner",
                 pipeline:[
                     {
+                        $lookup:{
+                            from:"followers",
+                            localField:"_id",
+                            foreignField:"profile",
+                            as:"followers"
+                        }
+                    },
+                    {
+                        $addFields:{
+                            followersCount:{$size:"$followers"},
+                            isFollowedByMe:isFollowedByMe
+                        }
+                    },
+                    {
                         $project:{
                             username:1,
                             fullName:1,
                             avatar:1,
+                            followersCount:1,
+                            isFollowedByMe:1
                         }
                     }
                 ]
@@ -729,6 +785,12 @@ const getTrendingWebs = asyncHandler(async (req, res) => {
             $project:{
                 likes:0,
                 comments:0,
+                html:0, 
+                css:0, 
+                js:0, 
+                cssLinks:0, 
+                jsLinks:0, 
+                htmlLinks:0
             }
         },
         {
@@ -802,6 +864,12 @@ const getYourWorkWebs = asyncHandler(async (req, res) => {
             $project:{
                 likes:0,
                 comments:0,
+                html:0, 
+                css:0, 
+                js:0, 
+                cssLinks:0, 
+                jsLinks:0, 
+                htmlLinks:0
             }
         },
         {
@@ -886,6 +954,12 @@ const searchFromWebsCreatedByMe = asyncHandler(async (req, res) => {
             $project:{
                 likes:0,
                 comments:0,
+                html:0, 
+                css:0, 
+                js:0, 
+                cssLinks:0, 
+                jsLinks:0, 
+                htmlLinks:0
             }
         },
         {
@@ -1391,6 +1465,12 @@ const searchFromAllWebs = asyncHandler(async (req, res) => {
             $project:{
                 likes:0,
                 comments:0,
+                html:0, 
+                css:0, 
+                js:0, 
+                cssLinks:0, 
+                jsLinks:0, 
+                htmlLinks:0
             }
         },
         {
