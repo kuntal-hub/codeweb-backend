@@ -546,6 +546,11 @@ const getFollowingWebs = asyncHandler(async (req, res) => {
                 as:"webs",
                 pipeline:[
                     {
+                        $match:{
+                            isPublic:true
+                        }
+                    },
+                    {
                         $lookup:{
                             from:"users",
                             localField:"owner",
