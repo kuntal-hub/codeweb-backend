@@ -200,6 +200,44 @@ const getWebByWebId = asyncHandler(async (req, res) => {
         },
         {
             $lookup:{
+                from:"webs",
+                localField:"forkedFrom",
+                foreignField:"_id",
+                as:"forkedFrom",
+                pipeline:[
+                    {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        username:1,
+                                        avatar:1,
+                                        fullName:1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner:{$first:"$owner"}
+                        }
+                    },
+                    {
+                        $project:{
+                            title:1,
+                            owner:1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $lookup:{
                 from:"likes",
                 localField:"_id",
                 foreignField:"web",
@@ -219,6 +257,7 @@ const getWebByWebId = asyncHandler(async (req, res) => {
                 likesCount:{
                     $size:"$likes"
                 },
+                forkedFrom:{$first:"$forkedFrom"},
                 commentsCount:{$size:"$comments"},
                 isLikedByMe:isLikedByMe,
                 owner:{$first:"$owner"}
@@ -247,8 +286,8 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
     const { webType = "public", sortBy="views", sortOrder="desc", page=1, limit=4 } = req.query;
     // get username from req.params
     const { username } = req.params;
-    // sortBy = views, createdAt, likesCount, commentsCount
-    // webType = public, private, forked
+    // sortBy = views, createdAt, likesCount, commentsCount, updatedAt
+    // webType = public, private, forked, all, notForked
     // return array of webs created by usee (userId)
     // webType: public, private, forked
     // userId = the user whose webs are to be fetched
@@ -264,9 +303,12 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
     // get userId from user
     const userId = user._id;
     // check webType is valid or not
-    let match,isLikedByMe;
+    let match,isLikedByMe,isFollowedByMe;
     // if webType is private then select only private webs
     if (webType === "private") {
+        if (!req.user || req.user?._id.toString() !== userId.toString()) {
+            throw new ApiError(401,"unauthorized access");
+        }
         match = {
             $match:{
                 owner:new mongoose.Types.ObjectId(userId),
@@ -290,7 +332,20 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
             }
         }
         // if webType is invalid then throw error
-    }else{
+    }else if(webType === "all"){
+        match = {
+            $match:{
+                owner:new mongoose.Types.ObjectId(userId),
+            }
+        }
+    } else if(webType === "notForked"){
+        match = {
+            $match:{
+                owner:new mongoose.Types.ObjectId(userId),
+                forkedFrom:{$exists:false}
+            }
+        }
+    } else {
         throw new ApiError(400,"invalid webType");
     }
     // if req.user provided then set values of isLikedByMe and isFollowedByMe else set false
@@ -304,8 +359,18 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
                 else:false
             }
         };
+        isFollowedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
     } else {
         isLikedByMe = false;
+        isFollowedByMe = false;
     }
     // get webs
     const aggregate = Web.aggregate([
@@ -318,7 +383,25 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
                 as:"owner",
                 pipeline:[
                     {
+                        $lookup:{
+                            from:"followers",
+                            localField:"_id",
+                            foreignField:"profile",
+                            as:"followers"
+                        }
+                    },
+                    {
+                        $addFields:{
+                            followersCount:{
+                                $size:"$followers"
+                            },
+                            isFollowedByMe:isFollowedByMe
+                        }
+                    },
+                    {
                         $project:{
+                            followersCount:1,
+                            isFollowedByMe:1,
                             username:1,
                             fullName:1,
                             avatar:1,
@@ -359,6 +442,12 @@ const getAllWebsByUserId = asyncHandler(async (req, res) => {
             $project:{
                 likes:0,
                 comments:0,
+                html:0, 
+                css:0, 
+                js:0, 
+                cssLinks:0, 
+                jsLinks:0, 
+                htmlLinks:0,
             }
         },
         {
@@ -899,26 +988,101 @@ const getYourWorkWebs = asyncHandler(async (req, res) => {
 })
 
 const searchFromWebsCreatedByMe = asyncHandler(async (req, res) => {
-    const { page=1, limit=4 , search} = req.query;
+    const { page=1, limit=4 , search, webType="all"} = req.query;
     // sortBy = likesCount,views,commentsCount,createdAt
+
+    let match;
+    // if webType is private then select only private webs
+    if (webType === "private") {
+        match = {
+            $match:{
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(req.user?._id)
+                    },
+                    {
+                        isPublic:false
+                    },
+                    {
+                        $text:{$search:search}
+                    },
+                ]
+            }
+        }
+        // if webType is forked then select only forked webs
+    } else if (webType === "forked") {
+        match = {
+            $match:{
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(req.user?._id)
+                    },
+                    {
+                        forkedFrom:{$exists:true}
+                    },
+                    {
+                        $text:{$search:search}
+                    },
+                ]
+            }
+        }
+        // if webType is public then select only public webs
+    } else if(webType === "public"){
+        match = {
+            $match:{
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(req.user?._id)
+                    },
+                    {
+                        isPublic:true
+                    },
+                    {
+                        $text:{$search:search}
+                    }
+                ]
+            }
+        }
+        // if webType is invalid then throw error
+    }else if(webType === "all"){
+        match = {
+            $match:{
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(req.user?._id)
+                    },
+                    {
+                        $text:{$search:search}
+                    }
+                ]
+            }
+        }
+    } else if(webType === "notForked"){
+        match = {
+            $match:{
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(req.user?._id)
+                    },
+                    {
+                        forkedFrom:{$exists:false}
+                    },
+                    {
+                        $text:{$search:search}
+                    }
+                ]
+            }
+        }
+    } else {
+        throw new ApiError(400,"invalid webType");
+    }
 
     if (!search) {
         throw new ApiError(400,"search query is required for searching webs");
     }
 
     const aggregate = Web.aggregate([
-        {
-            $match:{
-                $and:[
-                    {
-                        $text:{$search:search}
-                    },
-                    {
-                        owner:new mongoose.Types.ObjectId(req.user?._id)
-                    }
-                ]
-            }
-        },
+        match,
         {
             $lookup:{
                 from:"likes",
@@ -982,6 +1146,17 @@ const searchFromWebsCreatedByMe = asyncHandler(async (req, res) => {
     if (!webs) {
         throw new ApiError(500,"something went wrong while fetching webs");
     }
+
+    webs.docs = webs.docs.map(web => {
+        const owner = web.owner = {
+            username: req.user.username,
+            isFollowedByMe: false,
+            fullName: req.user.fullName,
+            avatar: req.user.avatar,
+            _id: req.user._id,
+        }
+        return {...web,owner}
+    })
 
     return res
     .status(200)

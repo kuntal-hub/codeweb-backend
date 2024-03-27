@@ -459,9 +459,9 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
     if (!user) throw new ApiError(404,"User not found");
     const userId = user._id;
     // get user_id collectionType,sortBy,sortOrder,page,limit from query
-    const {collectionType="public",sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
+    const {type="public",sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
     // take isLikedByMe variable
-    let isLikedByMe;
+    let isLikedByMe,match;
     // if req.user provided then set values of isLikedByMe else set false
     if (req.user) {
         isLikedByMe = {
@@ -476,14 +476,68 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
     } else {
         isLikedByMe = false;
     }
+    // get search from query
+    if (type==="all") {
+        match = {
+            $match:{
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(userId)
+                    },
+                    {
+                        $text:{
+                            $search:search
+                        }
+                    }
+                ]
+            }
+        }
+    } else if (type==="public") {
+        match = {
+            $match:{
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(userId)
+                    },
+                    {
+                        isPublic:true
+                    },
+                    {
+                        $text:{
+                            $search:search
+                        }
+                    }
+                ]
+            }
+        }
+    } else if (type==="private") {
+        if (!req.user || req.user.username !== username) {
+            throw new ApiError(401,"Unauthorized access");
+        }
+        match = {
+            $match:{
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(userId)
+                    },
+                    {
+                        isPublic:false
+                    },
+                    {
+                        $text:{
+                            $search:search
+                        }
+                    }
+                ]
+            }
+        }
+    } else {
+        throw new ApiError(400,"Invalid collection type");
+    }
+
     // get collections
     const aggregate = Collection.aggregate([
-        {
-            $match:{
-                owner:new mongoose.Types.ObjectId(userId),
-                isPublic:collectionType === "public" ? true : false
-            }
-        },
+        match,
         {
             $lookup:{
                 from:"webs",
@@ -872,14 +926,15 @@ const searchFromAllCollections = asyncHandler(async(req,res)=>{
 })
 
 const searchFromAllCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
-    const {search,page=1,limit=4} = req.query;
+    const {search,page=1,limit=4,type="all"} = req.query;
 
     if (!search) {
         throw new ApiError(400,"search query is required for searchin collections");
     }
 
-    const aggregate = Collection.aggregate([
-        {
+    let match;
+    if (type==="all") {
+        match = {
             $match:{
                 $and:[
                     {
@@ -892,7 +947,49 @@ const searchFromAllCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
                     }
                 ]
             }
-        },
+        }
+    } else if (type==="public") {
+        match = {
+            $match:{
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(req.user?._id)
+                    },
+                    {
+                        isPublic:true
+                    },
+                    {
+                        $text:{
+                            $search:search
+                        }
+                    }
+                ]
+            }
+        }
+    } else if (type==="private") {
+        match = {
+            $match:{
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(req.user?._id)
+                    },
+                    {
+                        isPublic:false
+                    },
+                    {
+                        $text:{
+                            $search:search
+                        }
+                    }
+                ]
+            }
+        }
+    }else {
+        throw new ApiError(400,"Invalid collection type");
+    }
+
+    const aggregate = Collection.aggregate([
+        match,
         {
             $lookup:{
                 from:"webs",
