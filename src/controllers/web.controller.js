@@ -533,7 +533,25 @@ const getLikedWebs = asyncHandler(async (req, res) => {
                             as:"owner",
                             pipeline:[
                                 {
+                                    $lookup:{
+                                        from:"followers",
+                                        localField:"_id",
+                                        foreignField:"profile",
+                                        as:"followers"
+                                    }
+                                },
+                                {
+                                    $addFields:{
+                                        followersCount:{
+                                            $size:"$followers"
+                                        },
+                                        isFollowedByMe:isFollowedByMe
+                                    }
+                                },
+                                {
                                     $project:{
+                                        followersCount:1,
+                                        isFollowedByMe:1,
                                         username:1,
                                         fullName:1,
                                         avatar:1,
@@ -1148,7 +1166,7 @@ const searchFromWebsCreatedByMe = asyncHandler(async (req, res) => {
     }
 
     webs.docs = webs.docs.map(web => {
-        const owner = web.owner = {
+        const owner = {
             username: req.user.username,
             isFollowedByMe: false,
             fullName: req.user.fullName,

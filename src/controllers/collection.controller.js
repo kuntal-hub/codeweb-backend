@@ -335,22 +335,32 @@ const getCollectionWEbsByCollectionId = asyncHandler(async(req,res)=>{
     if (!collection) {
         throw new ApiError(404,"Collection not found");
     }
-    // take isLikedByMe variable
-    let isLikedByMe;
-    // if req.user provided then set values of isLikedByMe else set false
-    if (req.user) {
-        isLikedByMe = {
-            $cond:{
-                if:{
-                    $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
-                },
-                then:true,
-                else:false
-            }
-        };
-    } else {
-        isLikedByMe = false;
-    }
+    // take isFollowedByMe and isLikedByMe variables
+    let isFollowedByMe,isLikedByMe
+        // if req.user provided then set values of isLikedByMe else set false
+        if (req.user) {
+            isFollowedByMe = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
+                    },
+                    then:true,
+                    else:false
+                }
+            };
+            isLikedByMe = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
+                    },
+                    then:true,
+                    else:false
+                }
+            };
+        } else {
+            isLikedByMe = false;
+            isFollowedByMe = false;
+        }
     // get webs from collection
     const aggregate = Collection.aggregate([
         {
@@ -378,10 +388,26 @@ const getCollectionWEbsByCollectionId = asyncHandler(async(req,res)=>{
                             as:"owner",
                             pipeline:[
                                 {
+                                    $lookup:{
+                                        from:"followers",
+                                        localField:"_id",
+                                        foreignField:"profile",
+                                        as:"followers"
+                                    }
+                                },
+                                {
+                                    $addFields:{
+                                        followersCount:{$size:"$followers"},
+                                        isFollowedByMe:isFollowedByMe
+                                    }
+                                },
+                                {
                                     $project:{
                                         fullName:1,
                                         username:1,
-                                        avatar:1
+                                        avatar:1,
+                                        followersCount:1,
+                                        isFollowedByMe:1
                                     }
                                 }
                             ]
@@ -459,41 +485,37 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
     if (!user) throw new ApiError(404,"User not found");
     const userId = user._id;
     // get user_id collectionType,sortBy,sortOrder,page,limit from query
-    const {type="public",sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
+    const {sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
     // take isLikedByMe variable
-    let isLikedByMe,match;
-    // if req.user provided then set values of isLikedByMe else set false
-    if (req.user) {
-        isLikedByMe = {
-            $cond:{
-                if:{
-                    $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
-                },
-                then:true,
-                else:false
-            }
-        };
-    } else {
-        isLikedByMe = false;
-    }
-    // get search from query
-    if (type==="all") {
-        match = {
-            $match:{
-                $and:[
-                    {
-                        owner:new mongoose.Types.ObjectId(userId)
+    // take isFollowedByMe and isLikedByMe variables
+    let isFollowedByMe,isLikedByMe
+        // if req.user provided then set values of isLikedByMe else set false
+        if (req.user) {
+            isFollowedByMe = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
                     },
-                    {
-                        $text:{
-                            $search:search
-                        }
-                    }
-                ]
-            }
+                    then:true,
+                    else:false
+                }
+            };
+            isLikedByMe = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
+                    },
+                    then:true,
+                    else:false
+                }
+            };
+        } else {
+            isLikedByMe = false;
+            isFollowedByMe = false;
         }
-    } else if (type==="public") {
-        match = {
+    // get collections
+    const aggregate = Collection.aggregate([
+        {
             $match:{
                 $and:[
                     {
@@ -501,43 +523,10 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
                     },
                     {
                         isPublic:true
-                    },
-                    {
-                        $text:{
-                            $search:search
-                        }
                     }
                 ]
             }
-        }
-    } else if (type==="private") {
-        if (!req.user || req.user.username !== username) {
-            throw new ApiError(401,"Unauthorized access");
-        }
-        match = {
-            $match:{
-                $and:[
-                    {
-                        owner:new mongoose.Types.ObjectId(userId)
-                    },
-                    {
-                        isPublic:false
-                    },
-                    {
-                        $text:{
-                            $search:search
-                        }
-                    }
-                ]
-            }
-        }
-    } else {
-        throw new ApiError(400,"Invalid collection type");
-    }
-
-    // get collections
-    const aggregate = Collection.aggregate([
-        match,
+        },
         {
             $lookup:{
                 from:"webs",
@@ -561,6 +550,41 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
             }
         },
         {
+            $lookup:{
+                from:"users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"owner",
+                pipeline:[
+                    {
+                        $lookup:{
+                            from:"followers",
+                            localField:"_id",
+                            foreignField:"profile",
+                            as:"followers"
+                        }
+                    },
+                    {
+                        $addFields:{
+                            followersCount:{
+                                $size:"$followers"
+                            },
+                            isFollowedByMe:isFollowedByMe
+                        }
+                    },
+                    {
+                        $project:{
+                            followersCount:1,
+                            isFollowedByMe:1,
+                            username:1,
+                            fullName:1,
+                            avatar:1,
+                        }
+                    }
+                ]
+            }
+        },
+        {
             Lookup:{
                 from:"likes",
                 localField:"_id",
@@ -573,6 +597,7 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
                 websCount:{$size:"$webs"},
                 webs:{$slice:["$webs",4]},
                 likesCount:{$size:"$likes"},
+                owner:{$first:"$owner"},
                 isLikedByMe:isLikedByMe
             }
         },
@@ -604,15 +629,47 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
 
 const getCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
     // get all collections created by user
-    const { sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
+    const { sortBy="createdAt",sortOrder="desc",page=1,limit=4,type="all"} = req.query;
     // sortBy = views,likesCount,websCount,createdAt
+    let match;
+    if (type==="all") {
+        match = {
+            $match:{
+                owner:new mongoose.Types.ObjectId(req.user?._id)
+            }
+        }
+    } else if (type==="public") {
+        match = {
+            $match:{
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(req.user?._id)
+                    },
+                    {
+                        isPublic:true
+                    }
+                ]
+            }
+        }
+    } else if (type==="private") {
+        match = {
+            $match:{
+                $and:[
+                    {
+                        owner:new mongoose.Types.ObjectId(req.user?._id)
+                    },
+                    {
+                        isPublic:false
+                    }
+                ]
+            }
+        }
+    } else {
+        throw new ApiError(400,"Invalid collection type");
+    }
     // get collections
     const aggregate = Collection.aggregate([
-        {
-            $match:{
-                owner:new mongoose.Types.ObjectId(req.user?._id),
-            }
-        },
+        match,
         {
             $lookup:{
                 from:"webs",
@@ -679,6 +736,17 @@ const getCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
     if (!collections) {
         throw new ApiError(404,"Collections not found");
     }
+    // set owner
+    collections.docs = collections.docs.map((c)=>{
+        const owner = {
+            username: req.user.username,
+            isFollowedByMe: false,
+            fullName: req.user.fullName,
+            avatar: req.user.avatar,
+            _id: req.user._id,
+        }
+        return {...c,owner}
+    })
     // return response
     return res
     .status(200)
@@ -698,22 +766,32 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
     // check if user is found or not
     if (!user) throw new ApiError(404,"User not found");
     const userId = user._id;
-    // take isLikedByMe variable
-    let isLikedByMe;
-    // if req.user provided then set values of isLikedByMe else set false
-    if (req.user) {
-        isLikedByMe = {
-            $cond:{
-                if:{
-                    $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
-                },
-                then:true,
-                else:false
-            }
-        };
-    } else {
-        isLikedByMe = false;
-    }
+    // take isFollowedByMe and isLikedByMe variables
+    let isFollowedByMe,isLikedByMe
+        // if req.user provided then set values of isLikedByMe else set false
+        if (req.user) {
+            isFollowedByMe = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
+                    },
+                    then:true,
+                    else:false
+                }
+            };
+            isLikedByMe = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
+                    },
+                    then:true,
+                    else:false
+                }
+            };
+        } else {
+            isLikedByMe = false;
+            isFollowedByMe = false;
+        }
     // get liked collections
     const aggregate = Like.aggregate([
         {
@@ -757,6 +835,39 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
                         }
                     },
                     {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $lookup:{
+                                        from:"followers",
+                                        localField:"_id",
+                                        foreignField:"profile",
+                                        as:"followers"
+                                    }
+                                },
+                                {
+                                    $addFields:{
+                                        followersCount:{$size:"$followers"},
+                                        isFollowedByMe:isFollowedByMe
+                                    }
+                                },
+                                {
+                                    $project:{
+                                        fullName:1,
+                                        username:1,
+                                        avatar:1,
+                                        followersCount:1,
+                                        isFollowedByMe:1
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
                         Lookup:{
                             from:"likes",
                             localField:"_id",
@@ -768,6 +879,7 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
                         $addFields:{
                             websCount:{$size:"$webs"},
                             webs:{$slice:["$webs",4]},
+                            owner:{$first:"$owner"},
                             likesCount:{$size:"$likes"},
                             isLikedByMe:isLikedByMe
                         }
@@ -818,22 +930,32 @@ const searchFromAllCollections = asyncHandler(async(req,res)=>{
     if (!search) {
         throw new ApiError(400,"search query is required for searchin collections");
     }
-    // take isLikedByMe variable
-    let isLikedByMe;
-    // if req.user provided then set values of isLikedByMe else set false
-    if (req.user) {
-        isLikedByMe = {
-            $cond:{
-                if:{
-                    $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
-                },
-                then:true,
-                else:false
-            }
-        };
-    } else {
-        isLikedByMe = false;
-    }
+    // take isFollowedByMe and isLikedByMe variables
+    let isFollowedByMe,isLikedByMe
+        // if req.user provided then set values of isLikedByMe else set false
+        if (req.user) {
+            isFollowedByMe = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
+                    },
+                    then:true,
+                    else:false
+                }
+            };
+            isLikedByMe = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user._id),"$likes.likedBy"]
+                    },
+                    then:true,
+                    else:false
+                }
+            };
+        } else {
+            isLikedByMe = false;
+            isFollowedByMe = false;
+        }
     // get collections
     const aggregate = Collection.aggregate([
         {
@@ -852,10 +974,26 @@ const searchFromAllCollections = asyncHandler(async(req,res)=>{
                 as:"owner",
                 pipeline:[
                     {
+                        $lookup:{
+                            from:"followers",
+                            localField:"_id",
+                            foreignField:"profile",
+                            as:"followers"
+                        }
+                    },
+                    {
+                        $addFields:{
+                            followersCount:{$size:"$followers"},
+                            isFollowedByMe:isFollowedByMe
+                        }
+                    },
+                    {
                         $project:{
                             fullName:1,
                             username:1,
-                            avatar:1
+                            avatar:1,
+                            followersCount:1,
+                            isFollowedByMe:1
                         }
                     }
                 ]
@@ -1055,6 +1193,17 @@ const searchFromAllCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
     if (!collections) {
         throw new ApiError(404,"Collections not found");
     }
+
+    collections.docs = collections.docs.map((c)=>{
+        const owner = {
+            username: req.user.username,
+            isFollowedByMe: false,
+            fullName: req.user.fullName,
+            avatar: req.user.avatar,
+            _id: req.user._id,
+        }
+        return {...c,owner}
+    })
 
     return res
     .status(200)

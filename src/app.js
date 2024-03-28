@@ -26,6 +26,7 @@ import healthCheckRouter from "./routes/healthCheck.router.js";
 import followerRouter from "./routes/followers.router.js";
 import collectionRouter from "./routes/collections.router.js";
 import assetRouter from "./routes/assets.router.js";
+import savedCollectionsRouter from "./routes/savedCollections.router.js";
 
 // use all routes
 app.use("/api/v1/users",userRouter);
@@ -37,6 +38,7 @@ app.use("/api/v1/healthCheck",healthCheckRouter);
 app.use("/api/v1/followers",followerRouter);
 app.use("/api/v1/collections",collectionRouter);
 app.use("/api/v1/assets",assetRouter);
+app.use("/api/v1/savedCollections",savedCollectionsRouter);
 
 app.use(errorHandler);
 
