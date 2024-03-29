@@ -1199,13 +1199,11 @@ const RecomendedpeopleToFollow = asyncHandler(async (req, res) => {
                         }
                     },
                     {
-                        $limit:2
-                    },
-                    {
                         $project:{
                             _id:1,
                             title:1,
-                            image:1
+                            image:1,
+                            views:1,
                         }
                     }
                 ]
@@ -1213,6 +1211,9 @@ const RecomendedpeopleToFollow = asyncHandler(async (req, res) => {
         },
         {
             $addFields:{
+                totalWebViews:{
+                    $sum:"$webs.views"
+                },
                 websCount:{
                     $size:"$webs"
                 },
@@ -1228,9 +1229,7 @@ const RecomendedpeopleToFollow = asyncHandler(async (req, res) => {
                         else:false
                     }
                 },
-                totalWebViews:{
-                    $sum:"$webs.views"
-                }
+                webs:{$slice:["$webs",2]},
             }
         },
         {
@@ -1256,7 +1255,6 @@ const RecomendedpeopleToFollow = asyncHandler(async (req, res) => {
             $sort:{
                 followersCount:-1,
                 totalWebViews:-1,
-                websCount:-1
             }
         }
     ]);
