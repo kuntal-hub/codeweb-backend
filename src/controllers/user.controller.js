@@ -1000,6 +1000,14 @@ const searchUsers = asyncHandler(async(req,res)=>{
         },
         {
             $lookup:{
+                from:"followers",
+                localField:"_id",
+                foreignField:"profile",
+                as:"followers"
+            }
+        },
+        {
+            $lookup:{
                 from:"webs",
                 localField:"_id",
                 foreignField:"owner",
@@ -1019,18 +1027,11 @@ const searchUsers = asyncHandler(async(req,res)=>{
                         $project:{
                             title:1,
                             _id:1,
-                            image:1
+                            image:1,
+                            views:1
                         }
                     }
                 ]
-            }
-        },
-        {
-            $lookup:{
-                from:"followers",
-                localField:"_id",
-                foreignField:"profile",
-                as:"followers"
             }
         },
         {
@@ -1041,9 +1042,12 @@ const searchUsers = asyncHandler(async(req,res)=>{
                 followersCount:{
                     $size:"$followers"
                 },
-                isFollowedByme:isFollowedByMe,
-                showcaseWebs:{$slice:["$webs",2]},
-                score:{$meta:"textScore"}
+                isFollowedByMe:isFollowedByMe,
+                webs:{$slice:["$webs",2]},
+                score:{$meta:"textScore"},
+                totalWebViews:{
+                    $sum:"$webs.views"
+                },
             }
         },
         {
@@ -1055,12 +1059,14 @@ const searchUsers = asyncHandler(async(req,res)=>{
         {
             $project:{
                 followersCount:1,
+                totalWebViews:1,
                 websCount:1,
                 username:1,
                 fullName:1,
                 avatar:1,
-                showcaseWebs:1,
-                isFollowedByme:1
+                webs:1,
+                isVerified:1,
+                isFollowedByMe:1
             }
         }
     ]);

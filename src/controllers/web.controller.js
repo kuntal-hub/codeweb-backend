@@ -1564,7 +1564,7 @@ const searchFromAllWebs = asyncHandler(async (req, res) => {
         throw new ApiError(400,"search query is required for searching webs");
     }
     // take a variable isLikedByMe
-    let isLikedByMe;
+    let isLikedByMe,isFollowedByMe;
     // if req.user provided then set values of isLikedByMe and isFollowedByMe else set false
     if (req.user) {
         isLikedByMe = {
@@ -1576,8 +1576,18 @@ const searchFromAllWebs = asyncHandler(async (req, res) => {
                 else:false
             }
         };
+        isFollowedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
     } else {
         isLikedByMe = false;
+        isFollowedByMe = false;
     }
     // get webs
     const aggregate = Web.aggregate([
@@ -1595,7 +1605,25 @@ const searchFromAllWebs = asyncHandler(async (req, res) => {
                 as:"owner",
                 pipeline:[
                     {
+                        $lookup:{
+                            from:"followers",
+                            localField:"_id",
+                            foreignField:"profile",
+                            as:"followers"
+                        }
+                    },
+                    {
+                        $addFields:{
+                            followersCount:{
+                                $size:"$followers"
+                            },
+                            isFollowedByMe:isFollowedByMe
+                        }
+                    },
+                    {
                         $project:{
+                            followersCount:1,
+                            isFollowedByMe:1,
                             username:1,
                             fullName:1,
                             avatar:1,
