@@ -37,7 +37,7 @@ const createCollection = asyncHandler(async(req,res)=>{
 
 const updateCollection = asyncHandler(async(req,res)=>{
     // get name and description from body
-    const {name,description} = req.body;
+    const {name,description,isPublic} = req.body;
     // check if name and description is present or not
     if(!name && !description) throw new ApiError(400,"name or description is required");
     // get collectionId from params
@@ -49,7 +49,7 @@ const updateCollection = asyncHandler(async(req,res)=>{
     // find collection name already exists or not
     const isCollectionExists = await Collection.findOne({name,owner:new mongoose.Types.ObjectId(req.user?._id)});
     // if collection with this name and user already exists then throw error
-    if (isCollectionExists) throw new ApiError(400,"Collection with this name already exists");
+    if (isCollectionExists && name !== isCollectionExists.name) throw new ApiError(400,"Collection with this name already exists");
     // find collection by id
     const collection = await Collection.findOne({
         _id:new mongoose.Types.ObjectId(collectionId),
@@ -62,6 +62,7 @@ const updateCollection = asyncHandler(async(req,res)=>{
     // update collection
     collection.name = name || collection.name;
     collection.description = description || collection.description;
+    collection.isPublic = isPublic ;
     // save collection
     const savedCollection = await collection.save({validateBeforeSave:false});
     // check if collection is saved or not
@@ -223,7 +224,7 @@ const getCollectionByCollectionId = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"collectionId is required");
     }
     // take isFollowedByMe and isLikedByMe variables
-    let isFollowedByMe,isLikedByMe
+    let isFollowedByMe,isLikedByMe,isSaved
         // if req.user provided then set values of isLikedByMe else set false
         if (req.user) {
             isFollowedByMe = {
@@ -244,9 +245,19 @@ const getCollectionByCollectionId = asyncHandler(async(req,res)=>{
                     else:false
                 }
             };
+            isSaved = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user._id),"$savedCollections.owner"]
+                    },
+                    then:true,
+                    else:false
+                }
+            }
         } else {
             isLikedByMe = false;
             isFollowedByMe = false;
+            isSaved = false;
         }
     // get collection by collectionId 
     const collection = await Collection.aggregate([
@@ -297,16 +308,26 @@ const getCollectionByCollectionId = asyncHandler(async(req,res)=>{
             }
         },
         {
+            $lookup:{
+                from:"savedcollections",
+                localField:"_id",
+                foreignField:"collection",
+                as:"savedCollections"
+            }
+        },
+        {
             $addFields:{
                 websCount:{$size:"$webs"},
                 likesCount:{$size:"$likes"},
                 owner:{$first:"$owner"},
-                isLikedByMe:isLikedByMe
+                isLikedByMe:isLikedByMe,
+                isSaved:isSaved
             }
         },
         {
             $project:{
-                likes:0
+                likes:0,
+                savedCollections:0
             }
         } 
     ])
@@ -488,7 +509,7 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
     const {sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
     // take isLikedByMe variable
     // take isFollowedByMe and isLikedByMe variables
-    let isFollowedByMe,isLikedByMe
+    let isFollowedByMe,isLikedByMe,isSaved;
         // if req.user provided then set values of isLikedByMe else set false
         if (req.user) {
             isFollowedByMe = {
@@ -509,9 +530,19 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
                     else:false
                 }
             };
+            isSaved = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user._id),"$savedCollections.owner"]
+                    },
+                    then:true,
+                    else:false
+                }
+            }
         } else {
             isLikedByMe = false;
             isFollowedByMe = false;
+            isSaved = false;
         }
     // get collections
     const aggregate = Collection.aggregate([
@@ -593,17 +624,27 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
             }
         },
         {
+            $lookup:{
+                from:"savedcollections",
+                localField:"_id",
+                foreignField:"collection",
+                as:"savedCollections"
+            }
+        },
+        {
             $addFields:{
                 websCount:{$size:"$webs"},
                 webs:{$slice:["$webs",4]},
                 likesCount:{$size:"$likes"},
                 owner:{$first:"$owner"},
-                isLikedByMe:isLikedByMe
+                isLikedByMe:isLikedByMe,
+                isSaved:isSaved
             }
         },
         {
             $project:{
-                likes:0
+                likes:0,
+                savedCollections:0
             }
         },
         {
@@ -701,6 +742,14 @@ const getCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
             }
         },
         {
+            $lookup:{
+                from:"savedcollections",
+                localField:"_id",
+                foreignField:"collection",
+                as:"savedCollections"
+            }
+        },
+        {
             $addFields:{
                 websCount:{$size:"$webs"},
                 webs:{$slice:["$webs",4]},
@@ -713,12 +762,22 @@ const getCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
                         then:true,
                         else:false
                     }
+                },
+                isSaved:{
+                    $cond:{
+                        if:{
+                            $in:[new mongoose.Types.ObjectId(req.user?._id),"$savedCollections.owner"]
+                        },
+                        then:true,
+                        else:false
+                    }
                 }
             }
         },
         {
             $project:{
-                likes:0
+                likes:0,
+                savedCollections:0
             }
         },
         {
@@ -767,7 +826,7 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
     if (!user) throw new ApiError(404,"User not found");
     const userId = user._id;
     // take isFollowedByMe and isLikedByMe variables
-    let isFollowedByMe,isLikedByMe
+    let isFollowedByMe,isLikedByMe,isSaved;
         // if req.user provided then set values of isLikedByMe else set false
         if (req.user) {
             isFollowedByMe = {
@@ -788,9 +847,19 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
                     else:false
                 }
             };
+            isSaved = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user._id),"$savedCollections.owner"]
+                    },
+                    then:true,
+                    else:false
+                }
+            }
         } else {
             isLikedByMe = false;
             isFollowedByMe = false;
+            isSaved = false;
         }
     // get liked collections
     const aggregate = Like.aggregate([
@@ -876,17 +945,27 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
                         }
                     },
                     {
+                        $lookup:{
+                            from:"savedcollections",
+                            localField:"_id",
+                            foreignField:"collection",
+                            as:"savedCollections"
+                        }
+                    },
+                    {
                         $addFields:{
                             websCount:{$size:"$webs"},
                             webs:{$slice:["$webs",4]},
                             owner:{$first:"$owner"},
                             likesCount:{$size:"$likes"},
-                            isLikedByMe:isLikedByMe
+                            isLikedByMe:isLikedByMe,
+                            isSaved:isSaved
                         }
                     },
                     {
                         $project:{
-                            likes:0
+                            likes:0,
+                            savedCollections:0
                         }
                     }
                 ]
@@ -931,7 +1010,7 @@ const searchFromAllCollections = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"search query is required for searchin collections");
     }
     // take isFollowedByMe and isLikedByMe variables
-    let isFollowedByMe,isLikedByMe
+    let isFollowedByMe,isLikedByMe,isSaved;
         // if req.user provided then set values of isLikedByMe else set false
         if (req.user) {
             isFollowedByMe = {
@@ -952,9 +1031,19 @@ const searchFromAllCollections = asyncHandler(async(req,res)=>{
                     else:false
                 }
             };
+            isSaved = {
+                $cond:{
+                    if:{
+                        $in:[new mongoose.Types.ObjectId(req.user._id),"$savedCollections.owner"]
+                    },
+                    then:true,
+                    else:false
+                }
+            }
         } else {
             isLikedByMe = false;
             isFollowedByMe = false;
+            isSaved = false;
         }
     // get collections
     const aggregate = Collection.aggregate([
@@ -1030,18 +1119,28 @@ const searchFromAllCollections = asyncHandler(async(req,res)=>{
             }
         },
         {
+            $lookup:{
+                from:"savedcollections",
+                localField:"_id",
+                foreignField:"collection",
+                as:"savedCollections"
+            }
+        },
+        {
             $addFields:{
                 websCount:{$size:"$webs"},
                 likesCount:{$size:"$likes"},
                 webs:{$slice:["$webs",0,4]},
                 owner:{$first:"$owner"},
                 isLikedByMe:isLikedByMe,
-                "score": { "$meta": "textScore" }
+                "score": { "$meta": "textScore" },
+                isSaved:isSaved
             }
         },
         {
             $project:{
-                likes:0
+                likes:0,
+                savedCollections:0
             }
         },
         {
@@ -1159,6 +1258,14 @@ const searchFromAllCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
             }
         },
         {
+            $lookup:{
+                from:"savedcollections",
+                localField:"_id",
+                foreignField:"collection",
+                as:"savedCollections"
+            }
+        },
+        {
             $addFields:{
                 websCount:{$size:"$webs"},
                 likesCount:{$size:"$likes"},
@@ -1172,12 +1279,22 @@ const searchFromAllCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
                         then:true,
                         else:false
                     }
+                },
+                isSaved:{
+                    $cond:{
+                        if:{
+                            $in:[new mongoose.Types.ObjectId(req.user?._id),"$savedCollections.owner"]
+                        },
+                        then:true,
+                        else:false
+                    }
                 }
             }
         },
         {
             $project:{
-                likes:0
+                likes:0,
+                savedCollections:0
             }
         },
         {
