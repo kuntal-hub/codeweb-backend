@@ -616,7 +616,7 @@ const getCollectionsByUserId = asyncHandler(async(req,res)=>{
             }
         },
         {
-            Lookup:{
+            $lookup:{
                 from:"likes",
                 localField:"_id",
                 foreignField:"collection",
@@ -815,7 +815,7 @@ const getCollectionsCreatedByMe = asyncHandler(async(req,res)=>{
 const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
     // get all collections liked by user
     const {username} = req.params;
-    const {sortBy="createdAt",sortOrder="desc",page=1,limit=4} = req.query;
+    const {page=1,limit=4} = req.query;
     // sortBy = views,likesCount,websCount,createdAt
     if (!username) {
         throw new ApiError(400,"userId is required");
@@ -867,6 +867,11 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
             $match:{
                 likedBy:new mongoose.Types.ObjectId(userId),
                 collection:{$exists:true}
+            }
+        },
+        {
+            $sort:{
+                createdAt:-1
             }
         },
         {
@@ -937,7 +942,7 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
                         }
                     },
                     {
-                        Lookup:{
+                        $lookup:{
                             from:"likes",
                             localField:"_id",
                             foreignField:"collection",
@@ -981,11 +986,6 @@ const getLikedCollectionsByUserId = asyncHandler(async(req,res)=>{
                 newRoot:"$collection"
             }
         },
-        {
-            $sort:{
-                [sortBy]:sortOrder === "asc" ? 1 : -1
-            }
-        }
     ])
 
     const likedCollections = await Like.aggregatePaginate(aggregate,{

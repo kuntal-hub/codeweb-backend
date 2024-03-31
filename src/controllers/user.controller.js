@@ -618,24 +618,32 @@ const getUserProfile = asyncHandler(async(req,res)=>{
     // get username from req.params
     const {username} = req.params;
     // get currentUser from req.user
-    const currentUser = req.user ? new mongoose.Types.ObjectId(req.user._id) : null;
-    // check if username exists or not
     if (!username) {
         throw new ApiError(400,"username is required");
     }
 
-    let isFollowing;
+    let isFollowedByMe,isLikedByMe;
     // check if currentUser exists or not and set isFollowing and isLiked
-    if(currentUser){
-        isFollowing = {
+    if(req.user){
+        isFollowedByMe={
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
+        isLikedByMe={
             $cond: {
-                if: {$in: [currentUser, "$followers.followedBy"]},
+                if: {$in: [new mongoose.Types.ObjectId(req.user?._id), "$likes.likedBy"]},
                 then: true,
                 else: false
             }
         };
     }else{
-        isFollowing = false;
+        isFollowedByMe= false;
+        isLikedByMe =false;
     }
 
     // get profile
@@ -643,6 +651,55 @@ const getUserProfile = asyncHandler(async(req,res)=>{
         {
             $match:{
                 username:username
+            }
+        },
+        {
+            $lookup:{
+                from:"webs",
+                localField:"showcase",
+                foreignField:"_id",
+                as:"showcase",
+                pipeline:[
+                    {
+                        $lookup:{
+                            from:"likes",
+                            localField:"_id",
+                            foreignField:"web",
+                            as:"likes"
+                        }
+                    },
+                    {
+                        $lookup:{
+                            from:"comments",
+                            localField:"_id",
+                            foreignField:"web",
+                            as:"comments"
+                        }
+                    },
+                    {
+                        $addFields:{
+                            likesCount:{
+                                $size:"$likes"
+                            },
+                            commentsCount:{
+                                $size:"$comments"
+                            },
+                            isLikedByMe:isLikedByMe
+                        }
+                    },
+                    {
+                        $project:{
+                            likes:0,
+                            comments:0,
+                            html:0, 
+                            css:0, 
+                            js:0, 
+                            cssLinks:0, 
+                            jsLinks:0, 
+                            htmlLinks:0
+                        }
+                    }
+                ]
             }
         },
         {
@@ -665,7 +722,7 @@ const getUserProfile = asyncHandler(async(req,res)=>{
             $addFields:{
                 followersCount:{$size:"$followers"},
                 followingCount:{$size:"$following"},
-                isFollowing:isFollowing
+                isFollowedByMe:isFollowedByMe
             }
         },
         {
@@ -675,7 +732,6 @@ const getUserProfile = asyncHandler(async(req,res)=>{
                 followers:0,
                 following:0,
                 pined:0,
-                showcase:0
             }
         }
     ])
@@ -806,10 +862,36 @@ const getPinedItems = asyncHandler(async(req,res)=>{
                             as:"owner",
                             pipeline:[
                                 {
+                                    $lookup:{
+                                        from:"followers",
+                                        localField:"_id",
+                                        foreignField:"profile",
+                                        as:"followers"
+                                    }
+                                },
+                                {
+                                    $addFields:{
+                                        followersCount:{
+                                            $size:"$followers"
+                                        },
+                                        isFollowedByMe:{
+                                            $cond:{
+                                                if:{
+                                                    $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
+                                                },
+                                                then:true,
+                                                else:false
+                                            }
+                                        }
+                                    }
+                                },
+                                {
                                     $project:{
+                                        followersCount:1,
+                                        isFollowedByMe:1,
                                         username:1,
-                                        avatar:1,
                                         fullName:1,
+                                        avatar:1,
                                     }
                                 }
                             ]

@@ -477,7 +477,7 @@ const getLikedWebs = asyncHandler(async (req, res) => {
     // get username from req.params
     const {username} = req.params;
     // get sortBy, sortOrder, page, limit from req.query
-    const {sortBy="createdAt",sortOrder="desc", page=1, limit=4 } = req.query;
+    const {page=1, limit=4 } = req.query;
     // sortBy = views, createdAt, likesCount, commentsCount
     // check userId is provided or not
     if (!username) {
@@ -490,7 +490,7 @@ const getLikedWebs = asyncHandler(async (req, res) => {
     // get userId from user
     const userId = user._id;
     // take a variable isLikedByMe
-    let isLikedByMe;
+    let isLikedByMe,isFollowedByMe;
     // if req.user provided then set values of isLikedByMe and isFollowedByMe else set false
     if (req.user) {
         isLikedByMe = {
@@ -502,8 +502,18 @@ const getLikedWebs = asyncHandler(async (req, res) => {
                 else:false
             }
         };
+        isFollowedByMe = {
+            $cond:{
+                if:{
+                    $in:[new mongoose.Types.ObjectId(req.user?._id),"$followers.followedBy"]
+                },
+                then:true,
+                else:false
+            }
+        };
     } else {
         isLikedByMe = false;
+        isFollowedByMe = false;
     }
     // get liked webs
     const aggregate = Like.aggregate([
@@ -511,6 +521,11 @@ const getLikedWebs = asyncHandler(async (req, res) => {
             $match:{
                 likedBy:new mongoose.Types.ObjectId(userId),
                 web:{$exists:true}
+            }
+        },
+        {
+            $sort:{
+                createdAt:-1
             }
         },
         {
@@ -609,11 +624,6 @@ const getLikedWebs = asyncHandler(async (req, res) => {
                 newRoot:"$web"
             }
         },
-        {
-            $sort:{
-                [sortBy]:sortOrder === "asc" ? 1 : -1
-            }
-        }
     ]);
 
     const likedWebs = await Like.aggregatePaginate(aggregate,{
@@ -623,11 +633,6 @@ const getLikedWebs = asyncHandler(async (req, res) => {
 
     if (!likedWebs) {
         throw new ApiError(500,"something went wrong while fetching webs");
-    }
-    if (likedWebs.length < 1) {
-        return res
-        .status(200)
-        .json(new ApiResponce(200,[],"you have not liked any web yet"));
     }
     return res
     .status(200)
