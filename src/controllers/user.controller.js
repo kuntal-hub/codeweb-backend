@@ -147,6 +147,7 @@ const loginUser = asyncHandler(async(req,res)=>{
     }
     // send response
     return res
+    .header({credentials:true})
     .status(200)
     .cookie("refreshToken",refreshToken,{...options,maxAge: (86400000*30)})
     .cookie("accessToken",accessToken,{...options,maxAge: 43200000})
@@ -179,6 +180,7 @@ const logoutUser = asyncHandler(async(req,res)=>{
     }
     // send response
     return res
+    .header({credentials:true})
     .status(200)
     .clearCookie("refreshToken",{...options,maxAge: (86400000*30)})
     .clearCookie("accessToken",{...options,maxAge: 43200000})
@@ -207,6 +209,7 @@ try {
         const accessToken = user.generateAccessToken();
     // send response
         return res
+        .header({credentials:true})
         .status(200)
         .cookie("accessToken",accessToken,{  
             httpOnly: true,
