@@ -141,7 +141,7 @@ const loginUser = asyncHandler(async(req,res)=>{
     const options = {
         httpOnly: true,
         secure: true,
-        sameSite: "Lax",
+        sameSite: "none",
         domain:"onrender.com",
         path:"/api/v1"
     }
@@ -173,7 +173,7 @@ const logoutUser = asyncHandler(async(req,res)=>{
     const options = {
         httpOnly: true,
         secure: true,
-        sameSite: "Lax",
+        sameSite: "none",
         domain:"onrender.com",
         path:"/api/v1"
     }
@@ -211,7 +211,7 @@ try {
         .cookie("accessToken",accessToken,{  
             httpOnly: true,
             secure: true,
-            sameSite: "Lax",
+            sameSite: "none",
             maxAge: 43200000,
             domain:"onrender.com",
             path:"/api/v1"
