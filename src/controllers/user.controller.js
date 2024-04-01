@@ -142,7 +142,7 @@ const loginUser = asyncHandler(async(req,res)=>{
         httpOnly: true,
         secure: true,
         sameSite: "None",
-        domain:"onrender.com",
+        domain:"vercel.app",
         path:"/api/v1"
     }
     // send response
@@ -174,7 +174,7 @@ const logoutUser = asyncHandler(async(req,res)=>{
         httpOnly: true,
         secure: true,
         sameSite: "None",
-        domain:"onrender.com",
+        domain:"vercel.app",
         path:"/api/v1"
     }
     // send response
@@ -213,7 +213,7 @@ try {
             secure: true,
             sameSite: "None",
             maxAge: 43200000,
-            domain:"onrender.com",
+            domain:"vercel.app",
             path:"/api/v1"
         })
         .json(new ApiResponce(200,{accessToken},"Access token refreshed successfully"));
