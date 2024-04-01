@@ -141,8 +141,8 @@ const loginUser = asyncHandler(async(req,res)=>{
     const options = {
         httpOnly: true,
         secure: true,
-        sameSite: "none",
-        domain:"onrender.com",
+        sameSite: "None",
+        domain:".onrender.com",
         path:"/api/v1"
     }
     // send response
@@ -173,8 +173,8 @@ const logoutUser = asyncHandler(async(req,res)=>{
     const options = {
         httpOnly: true,
         secure: true,
-        sameSite: "none",
-        domain:"onrender.com",
+        sameSite: "None",
+        domain:".onrender.com",
         path:"/api/v1"
     }
     // send response
@@ -211,9 +211,9 @@ try {
         .cookie("accessToken",accessToken,{  
             httpOnly: true,
             secure: true,
-            sameSite: "none",
+            sameSite: "None",
             maxAge: 43200000,
-            domain:"onrender.com",
+            domain:".onrender.com",
             path:"/api/v1"
         })
         .json(new ApiResponce(200,{accessToken},"Access token refreshed successfully"));
