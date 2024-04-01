@@ -147,7 +147,7 @@ const loginUser = asyncHandler(async(req,res)=>{
     return res
     .status(200)
     .cookie("refreshToken",refreshToken,{...options,maxAge: (86400000*30)})
-    .cookie("accessToken",accessToken,{...options,maxAge: 43200000})
+    .cookie("accessToken",accessToken,{...options,maxAge: 86400000})
     .json(new ApiResponce(200,{accessToken,refreshToken,user:logedInUser},"User logged in successfully"));
 })
 
@@ -177,7 +177,7 @@ const logoutUser = asyncHandler(async(req,res)=>{
     return res
     .status(200)
     .clearCookie("refreshToken",{...options,maxAge: (86400000*30)})
-    .clearCookie("accessToken",{...options,maxAge: 43200000})
+    .clearCookie("accessToken",{...options,maxAge: 86400000})
     .json(new ApiResponce(200,{},"User logged out successfully"));
 })
 
@@ -208,7 +208,7 @@ try {
             httpOnly: true,
             secure: true,
             sameSite: "None",
-            maxAge: 43200000,})
+            maxAge: 86400000,})
         .json(new ApiResponce(200,{accessToken},"Access token refreshed successfully"));
 } catch (error) {
     throw new ApiError(403,"Unauthorized request");
