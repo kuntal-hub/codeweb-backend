@@ -140,8 +140,10 @@ const loginUser = asyncHandler(async(req,res)=>{
 
     const options = {
         httpOnly: true,
-        SameSite: "None",
-        Secure: true,
+        secure: true,
+        sameSite: "Lax",
+        domain:"onrender.com",
+        path:"/api/v1"
     }
     // send response
     return res
@@ -170,8 +172,10 @@ const logoutUser = asyncHandler(async(req,res)=>{
 
     const options = {
         httpOnly: true,
-        SameSite: "None",
-        Secure: true,
+        secure: true,
+        sameSite: "Lax",
+        domain:"onrender.com",
+        path:"/api/v1"
     }
     // send response
     return res
@@ -206,9 +210,11 @@ try {
         .status(200)
         .cookie("accessToken",accessToken,{  
             httpOnly: true,
-            SameSite: "None",
-            Secure: true,
+            secure: true,
+            sameSite: "Lax",
             maxAge: 43200000,
+            domain:"onrender.com",
+            path:"/api/v1"
         })
         .json(new ApiResponce(200,{accessToken},"Access token refreshed successfully"));
 } catch (error) {
