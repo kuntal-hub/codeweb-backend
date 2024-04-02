@@ -42,7 +42,7 @@ const checkCurrentUser = asyncHandler(async(req,res,next)=>{
         // get token from header or cookie
         const token=req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ","")
         // check if token exists
-        if (!token) {
+        if (!token || token === "null") {
             return next();
         }
         // verify token

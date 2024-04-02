@@ -185,7 +185,7 @@ const getSavedCollections = asyncHandler(async (req, res) => {
                         }
                     },
                     {
-                        Lookup:{
+                        $lookup:{
                             from:"likes",
                             localField:"_id",
                             foreignField:"collection",
@@ -198,6 +198,7 @@ const getSavedCollections = asyncHandler(async (req, res) => {
                             webs:{$slice:["$webs",4]},
                             owner:{$first:"$owner"},
                             likesCount:{$size:"$likes"},
+                            isSaved:true,
                             isLikedByMe:{
                                 $cond:{
                                     if:{
