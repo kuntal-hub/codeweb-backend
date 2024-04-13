@@ -1496,30 +1496,37 @@ install nodejs and mongodb in your local system and ensure that they are working
 ### Step 2
 To clone this project in your local system you first create a folder and then open that folder in your terminal and then run the below command.
 
-`
-git clone "https://github.com/kuntal-hub/codeweb-backend.git"
-`
+```bash
+git clone https://github.com/kuntal-hub/codeweb-backend.git
+```
 
 before running this command make sure that you have git installed in your local system.
 
-### Step 3
+### step 3
+move to the project directory by running the below command.
+
+```bash
+cd codeweb-backend
+```
+
+### Step 4
 after cloning this project in your local system you need to install all the dependencies that are used in this project. to install all the dependencies run the below command in your terminal.
 
-`
+```bash
 npm install
-`
+```
 
 this command will install all the dependencies that are used in this project.
 
-### Step 4
+### Step 5
 after installing all the dependencies you need to create a .env file in the root directory of this project and then copy all the content from .env.example file and paste it in .env file and then change the value of all the variables according to your need.
 
-### Step 5
+### Step 6
 after doing all the above steps you are ready to run this project in your local system. to run this project in your local system run the below command in your terminal.
 
-`
+```bash
 npm run dev
-`
+```
 
 congratulations now you have successfully run this project in your local system.
 
@@ -1527,31 +1534,56 @@ congratulations now you have successfully run this project in your local system.
 
 # How to contribute in this project
 
-if you want to contribute in this project then you can contribute in this project by following the below steps.
+This project is open for contributions. If you want to contribute in this project, you can follow the below steps.
 
-### Step 1
+### Fork the repository
 fork this project in your github account by clicking on the fork button.
 
-### Step 2
-clone this project in your local system by following the same steps that are mentioned above.
+### Clone the repository
+clone the repository by running the following command in your terminal
 
-### Step 3
-after cloning this project in your local system create a new branch by running the below command in your terminal.
+```bash
+git clone <your-forked-repository-url>
+```
 
-`
-git checkout -b "your branch name"
-`
+### Change the directory
+change the directory to codeweb-frontend by running the following command in your terminal
 
-### Step 4
-after creating a new branch make your changes in that branch and then push that branch in your github account by running the below command in your terminal.
+```bash
+cd <cloned-repository-name>
+```
 
-`
-git push origin "your branch name"
-`
+### Install the dependencies
+install the dependencies by running the following command in your terminal
 
-### Step 5
-after pushing the branch in your github account create a pull request and then I will review your pull request and then merge your pull request in the main branch.
+```bash
+npm install
+```
 
----
+### configure the environment variables
+after installing all the dependencies you need to create a .env file in the root directory of this project and then copy all the content from .env.example file and paste it in .env file and then change the value of all the variables according to your need.
 
+### make changes
+make the changes in the project according to your need.
+like adding new features, fixing bugs, improving the UI, etc.
 
+### Run the project
+after doing all the above steps you are ready to run this project in your local system. to run this project in your local system run the below command in your terminal.
+
+```bash
+npm run dev
+```
+
+### push the changes
+after making the changes you need to push the changes to your forked repository by running the following command in your terminal
+
+```bash
+git add .
+git commit -m "your commit message"
+git push origin <your-branch-name>
+```
+
+### Create a pull request
+after pushing the changes to your forked repository you need to create a pull request to the main repository. you can create a pull request by clicking on the create pull request button.
+
+**congratulations 🎉** now you have successfully created a pull request. Now, the maintainers of this project will review your pull request and if everything is fine then your pull request will be merged.
