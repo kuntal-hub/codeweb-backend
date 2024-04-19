@@ -13,123 +13,23 @@ const transporter = nodemailer.createTransport({
 
   const sendMail = async (options) => {
     const mailType = options.mailType
-    let html;
+    let text;
     let subject;
     if (mailType === "verifyEmail" || mailType === "forgotPassword" || mailType === "changeEmail" || mailType === "welcomeEmail") {
-        let text1,text2,text3;
         if (mailType === "verifyEmail") {
-            text1 = "Thanks for signing up with CodeWeb! We're excited to have you as an early user.";
-            text2 = "To get started, please verify your email address below.";
-            text3 = "Verify Email";
             subject = "Verify your email address";
+            text = `Hello ${options.fullName},\n\n` + "Thanks for signing up for CodeWeb! Please verify your email address by clicking the link below:" + "\n\n" + options.url + "\n\n" + "If you didn't create an account with this email address, please ignore this email." + "\n\n" + "Thanks,\nCodeWeb Team";
+
         } else if (mailType === "forgotPassword") {
-            text1 = "You are receiving this email because you requested a password reset for your CodeWeb account.";
-            text2 = "Please click the button below to create a new password.";
-            text3 = "Reset Password";
             subject = "Reset your password";
+            text = `Hello ${options.fullName},\n\n` + "We received a request to reset your password for your CodeWeb account. Please click the link below to reset your password:" + "\n\n" + options.url + "\n\n" + "If you did not request a password reset, please ignore this email." + "\n\n" + "Thanks,\nCodeWeb Team";
         } else if (mailType === "changeEmail") {
-            text1 = "You are receiving this email because you requested to change your email address for your CodeWeb account.";
-            text2 = "Please click the button below to verify your new email address.";
-            text3 = "Verify Email";
             subject = "Verify your new email address";
+            text = `Hello ${options.fullName},\n\n` + "We received a request to change your email address on CodeWeb. Please verify your new email address by clicking the link below:" + "\n\n" + options.url + "\n\n" + "If you did not request to change your email address, please ignore this email." + "\n\n" + "Thanks,\nCodeWeb Team";
         } else if (mailType === "welcomeEmail") {
-            text1 = "Thanks for signing up with CodeWeb! We're excited to have you as an early user.";
-            text2 = "To get started, please click the button below to verify your email address.";
-            text3 = "Verify Email";
             subject = "welcome to CodeWeb";
+            text = `Hello ${options.fullName},\n\n` + "Welcome to CodeWeb! We're excited to have you as an early user." + "\n\n" + "For better experience, please verify your email address by clicking the link below:" + "\n\n" + options.url + "\n\n" + "If you have any questions or feedback, please don't hesitate to reach out to us at" + "\n\n" + "Thanks,\nCodeWeb Team";
         }
-        html = `<!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                #logo{
-                    width: 60px;
-                    height: 50px;
-                }
-                .header{
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    background-color: #ededed;
-                    color: #fff;
-                    padding: 15px;
-                    border-radius: 10px;
-                }
-                .Cname{
-                    font-size: 25px;
-                    color: black;
-                    font-weight: 800;
-                    margin-left: 10px;
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                }
-                .footer{
-                    margin-top: 80px;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    background-color: #f9f9f9;
-                    color: #fff;
-                    padding: 16px;
-                    border-radius: 10px;
-                }
-                .cname{
-                    font-size: 15px;
-                    color: black;
-                    font-weight: 800;
-                    margin-left: 10px;
-                    font-family: 'Times New Roman', Times, serif;
-                }
-                .button {
-          border-radius: 10px;
-          background-color: #f4511e;
-          border: none;
-          display: block;
-          margin-left: auto;
-          margin-right: auto;
-          color: #FFFFFF;
-          text-decoration: none;
-          text-align: center;
-          font-size: 20px;
-          font-weight: 500;
-          padding: 20px;
-          width: 230px;
-          transition: all 0.5s;
-          cursor: pointer;
-          margin: 5px;
-        }
-        @media screen and (max-width: 600px) {
-            .reg{
-                font-size: 18px;
-                margin-left: 20px;
-            }
-        }
-        .reg{
-            font-size: 18px;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <img id="logo" src="https://res.cloudinary.com/dvrpvl53d/image/upload/v1705401176/inp6vcp335ucfhcvxt09.png" alt="LOGO">
-                <span class="Cname">CODEWEB</span>
-            </div>
-                <h1>Welcome, ${options.fullName}!</h1>
-                <p style="font-size: 16px;">${text1}</p>
-                <p style="font-size: 16px;">${text2}</p>
-                <a href="${options.url}" class="button" target="_blank">${text3}</a>
-                <p class="reg" style="font-weight: 500;">Thanks,</p>
-                <p class="reg">Team Codeweb</p>
-        
-                <div class="footer">
-                        <img id="logo" src="https://res.cloudinary.com/dvrpvl53d/image/upload/v1705401176/inp6vcp335ucfhcvxt09.png" alt="LOGO">
-                    <span class="cname">Copyright © 2024 | kuntalmaity.tech</span>
-                    
-                </div>
-        
-        </body>
-        </html>`
     }
     const mailOptions = {
       from: {
@@ -138,7 +38,7 @@ const transporter = nodemailer.createTransport({
       },
       to: options?.email,
       subject: subject,
-      html: html
+      text:text,
     };
 
     transporter.sendMail(mailOptions,(err,info)=>{
