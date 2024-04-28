@@ -1304,17 +1304,26 @@ const updateWeb = asyncHandler(async (req, res) => {
     // check image is provided or not
     if(req.file){
         const imageLocalPath = req.file?.path;
-        // check web is fored or not
-        if (web.forkedFrom) {
-            const originalWeb = await Web.findById(web.forkedFrom).select("public_id image");
-            // check original web found or not or both image are same or not if not same then delete it
-            if (!originalWeb || originalWeb.image !== web.image) {
-                // delete image from cloudinary
-                const deleteImage = await deleteFromCloudinary(web.public_id);
-                // check image is deleted or not
-                if (!deleteImage) {
-                    throw new ApiError(500,"something went wrong while deleting image from cloudinary");
+        // check same image is used in another web or not
+        const usedImage = await Web.findOne({
+            $and:[
+                {
+                    _id:{
+                        $ne:new mongoose.Types.ObjectId(webId)
+                    }
+                },
+                {
+                    image:web.image
                 }
+            ]
+        }).select("public_id image");
+
+        if (!usedImage) {
+            // delete image from cloudinary
+            const deleteImage = await deleteFromCloudinary(web.public_id);
+            // check image is deleted or not
+            if (!deleteImage) {
+                throw new ApiError(500,"something went wrong while deleting image from cloudinary");
             }
         }
         // upload image on cloudinary
@@ -1359,17 +1368,26 @@ const deleteWeb = asyncHandler(async (req, res) => {
     if (!web) {
         throw new ApiError(404,"web not found, invalid webId or unauthorized");
     }
-        // check web is fored or not
-        if (web.forkedFrom) {
-            const originalWeb = await Web.findById(web.forkedFrom).select("public_id image");
-            // check original web found or not or both image are same or not if not same then delete it
-            if (!originalWeb || originalWeb.image !== web.image) {
-                // delete image from cloudinary
-                const deleteImage = await deleteFromCloudinary(web.public_id);
-                // check image is deleted or not
-                if (!deleteImage) {
-                    throw new ApiError(500,"something went wrong while deleting image from cloudinary");
+        // check same image is used in another web or not
+        const usedImage = await Web.findOne({
+            $and:[
+                {
+                    _id:{
+                        $ne:new mongoose.Types.ObjectId(webId)
+                    }
+                },
+                {
+                    image:web.image
                 }
+            ]
+        }).select("public_id image");
+
+        if (!usedImage) {
+            // delete image from cloudinary
+            const deleteImage = await deleteFromCloudinary(web.public_id);
+            // check image is deleted or not
+            if (!deleteImage) {
+                throw new ApiError(500,"something went wrong while deleting image from cloudinary");
             }
         }
     // delete web
