@@ -1304,11 +1304,18 @@ const updateWeb = asyncHandler(async (req, res) => {
     // check image is provided or not
     if(req.file){
         const imageLocalPath = req.file?.path;
-        // delete image from cloudinary
-        const deleteImage = await deleteFromCloudinary(web.public_id);
-        // check image is deleted or not
-        if (!deleteImage) {
-            throw new ApiError(500,"something went wrong while deleting image from cloudinary");
+        // check web is fored or not
+        if (web.forkedFrom) {
+            const originalWeb = await Web.findById(web.forkedFrom).select("public_id image");
+            // check original web found or not or both image are same or not if not same then delete it
+            if (!originalWeb || originalWeb.image !== web.image) {
+                // delete image from cloudinary
+                const deleteImage = await deleteFromCloudinary(web.public_id);
+                // check image is deleted or not
+                if (!deleteImage) {
+                    throw new ApiError(500,"something went wrong while deleting image from cloudinary");
+                }
+            }
         }
         // upload image on cloudinary
         const image = await uploadOnCloudinary(imageLocalPath);
@@ -1346,17 +1353,25 @@ const deleteWeb = asyncHandler(async (req, res) => {
         throw new ApiError(400,"webId is required");
     }
     // get web by webId and owner
-    const web = await Web.findOne({_id:new mongoose.Types.ObjectId(webId),owner:new mongoose.Types.ObjectId(req.user?._id)});
+    const web = await Web.findOne({_id:new mongoose.Types.ObjectId(webId),owner:new mongoose.Types.ObjectId(req.user?._id)})
+    .select("-html -css -js -cssLinks -jsLinks -htmlLinks");
     // check web is found or not
     if (!web) {
         throw new ApiError(404,"web not found, invalid webId or unauthorized");
     }
-    // delete image from cloudinary
-    const deleteImage = await deleteFromCloudinary(web.public_id);
-    // check image is deleted or not
-    if (!deleteImage) {
-        throw new ApiError(500,"something went wrong while deleting image from cloudinary");
-    }
+        // check web is fored or not
+        if (web.forkedFrom) {
+            const originalWeb = await Web.findById(web.forkedFrom).select("public_id image");
+            // check original web found or not or both image are same or not if not same then delete it
+            if (!originalWeb || originalWeb.image !== web.image) {
+                // delete image from cloudinary
+                const deleteImage = await deleteFromCloudinary(web.public_id);
+                // check image is deleted or not
+                if (!deleteImage) {
+                    throw new ApiError(500,"something went wrong while deleting image from cloudinary");
+                }
+            }
+        }
     // delete web
     const deletedWeb = await Web.findByIdAndDelete(webId);
     // check web is deleted or not
