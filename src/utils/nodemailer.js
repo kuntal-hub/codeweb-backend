@@ -2,13 +2,12 @@ import nodemailer from "nodemailer";
 
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  host: "smtp.gmail.com",
+  host: "live.smtp.mailtrap.io",
   port: 587,
   auth: {
-    user: process.env.GMAIL_APP_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
+    user: process.env.MAILTRAP_USER,
+    pass: process.env.MAILTRAP_PASS,
+  }
 });
 
   const sendMail = async (options) => {
@@ -34,7 +33,7 @@ const transporter = nodemailer.createTransport({
     const mailOptions = {
       from: {
         name: "CodeWeb",
-        address: process.env.GMAIL_APP_USER
+        address: "team@kuntalmaity.tech"
       },
       to: options?.email,
       subject: subject,
