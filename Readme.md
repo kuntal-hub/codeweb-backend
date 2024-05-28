@@ -55,6 +55,18 @@ I build a complete online code editing and publishing web app similar to codepen
 3. get all followers
 4. get all followings
 
+## Technology used
+- nodejs
+- expressjs
+- mongodb
+- mongoose
+- jwt
+- bcrypt
+- nodemailer
+- cloudinary
+- multer
+- and many more
+
 ---
 
 # How to use this project in your frontend web app or mobile app
