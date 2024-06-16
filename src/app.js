@@ -1,12 +1,20 @@
-import express from "express";
+import express, { json } from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import errorHandler from "./middlewares/errorHendeler.middleware.js";
 
 const app = express();
 
+const allowedOrigins = JSON.parse(process.env.CORS_ORIGIN);
+
 app.use(cors({
-    origin:process.env.CORS_ORIGIN,
+    origin: function (origin, callback) {
+        if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     optionsSuccessStatus:200,
     credentials:true
 }))
