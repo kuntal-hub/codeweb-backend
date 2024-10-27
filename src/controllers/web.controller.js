@@ -1779,7 +1779,7 @@ const updateEditorPreferences = asyncHandler(async (req, res) => {
         theme: theme || "vs-dark",
         fontSize: fontSize || "15px",
         fontWeight: fontWeight || "500",
-        formatOnType: formatOnType === "true" ? true : false,
+        formatOnType: formatOnType || false,
         lineHeight: lineHeight || 20,
         mouseWheelZoom: mouseWheelZoom || true,
         wordWrap: wordWrap || "on"
