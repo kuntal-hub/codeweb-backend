@@ -6,9 +6,14 @@ and also you can share your work with others
 
 ***
 
+## Frontend Code
+[See Frontend](https://github.com/kuntal-hub/codeweb-frontend)
+
 # Resources
 
 [Model link](https://app.eraser.io/workspace/VRNED9NfNXsJeNhSgz4m?origin=share)
+
+[Final deployed app link](https://codeweb-woad.vercel.app/)
 
 ***
 # About this project
