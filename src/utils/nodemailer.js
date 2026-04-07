@@ -31,10 +31,7 @@ const sendMail = async (options) => {
     }
   }
   const mailOptions = {
-    from: {
-      name: "CodeWeb",
-      address: "support@kuntalmaity.in"
-    },
+    from: `"CodeWeb" <${process.env.ZOHO_APP_USER}>`,
     to: options?.email,
     subject: subject,
     text: text,
