@@ -3,8 +3,9 @@ import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
   host: "smtp.zoho.in",
-  port: 465,
-  secure: true,
+  port: 587,
+  secure: false,
+  family: 4, // 👈 force IPv4
   auth: {
     user: process.env.ZOHO_APP_USER,
     pass: process.env.ZOHO_APP_PASSWORD,
