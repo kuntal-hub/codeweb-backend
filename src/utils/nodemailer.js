@@ -3,7 +3,8 @@ import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
   host: "smtp.zoho.in",
-  port: parseInt(process.env.ZOHO_SMTP_PORT || "465"),
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.ZOHO_APP_USER,
     pass: process.env.ZOHO_APP_PASSWORD,
@@ -39,10 +40,10 @@ const sendMail = async (options) => {
 
   transporter.sendMail(mailOptions, (err, info) => {
     if (err) {
-      console.log(false);
+      console.log(err);
       return false;
     } else {
-      console.log(true)
+      console.log(info);
       return true;
     }
   })
