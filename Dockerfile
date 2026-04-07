@@ -1,5 +1,5 @@
-# Use Node.js v14
-FROM node:20
+
+FROM node:24
 
 # Create app directory
 WORKDIR /app
@@ -13,6 +13,7 @@ RUN npm install
 # Bundle app source
 COPY . .
 
+COPY .env .
 # Expose the port
 ENV PORT 8080
 EXPOSE 8080
