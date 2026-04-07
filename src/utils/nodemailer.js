@@ -33,7 +33,7 @@ const sendMail = async (options) => {
   const mailOptions = {
     from: {
       name: "CodeWeb",
-      address: "team@kuntalmaity.tech"
+      address: "support@kuntalmaity.in"
     },
     to: options?.email,
     subject: subject,
