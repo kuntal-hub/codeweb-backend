@@ -1,17 +1,3 @@
-import nodemailer from "nodemailer";
-
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.zoho.in",
-  port: 587,
-  secure: false,
-  family: 4, // 👈 force IPv4
-  auth: {
-    user: process.env.ZOHO_APP_USER,
-    pass: process.env.ZOHO_APP_PASSWORD,
-  },
-});
-
 const sendMail = async (options) => {
   const mailType = options.mailType
   let text;
@@ -32,22 +18,33 @@ const sendMail = async (options) => {
       text = `Hello ${options.fullName},\n\n` + "Welcome to CodeWeb! We're excited to have you as an early user." + "\n\n" + "For better experience, please verify your email address by clicking the link below:" + "\n\n" + options.url + "\n\n" + "If you have any questions or feedback, please don't hesitate to reach out to us at" + "\n\n" + "Thanks,\nCodeWeb Team";
     }
   }
-  const mailOptions = {
-    from: `"CodeWeb" <${process.env.ZOHO_APP_USER}>`,
-    to: options?.email,
-    subject: subject,
-    text: text,
-  };
 
-  transporter.sendMail(mailOptions, (err, info) => {
-    if (err) {
-      console.log(err);
-      return false;
-    } else {
-      console.log(info);
-      return true;
+  try {
+    const response = await fetch("https://kuntalmaity.in/api/send-custom-mail", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: `"CodeWeb" <support@kuntalmaity.in>`,
+        to: options?.email,
+        subject: subject,
+        text: text,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to send mail");
     }
-  })
+
+    console.log("Mail sent successfully:", data);
+    return data;
+  } catch (error) {
+    console.error("Error sending mail:", error.message);
+    throw error;
+  }
 }
 
 //options= {email,fullName,url,mailType}
